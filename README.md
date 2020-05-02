@@ -1,4 +1,4 @@
-# stayhome-wes
+# stayhome_wes
 
 - 後から追記していく
 - 英語に書き直す (はず)
@@ -10,6 +10,22 @@
   - pip install -> exec command のみで local で動作する
 - cwltool を直持ちさせて、pip install 時に使用する
   - 内部で import して実行する
+
+## Environment
+
+- Docker
+  - もし cwltool が使うのならば
+- Python 3.6 以上
+
+- 開発時は Docker and docker-compose を使って開発しているが、動作としては、local への pip install を想定する
+  - for cwltool のための、docker sibling mount がめんどくさい
+
+### Develop
+
+```
+$ docker-compose up -d --build
+$ docker-compose exec app bash
+```
 
 ## Lisense
 
