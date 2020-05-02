@@ -7,11 +7,11 @@ services:
     image: stayhome_wes
     container_name: stayhome_wes
     volumes:
-      - /usr/local/docker:/usr/local/docker # for Ubuntu
-      - /usr/local/bin/docker:/usr/local/bin/docker # for MacOS
+      - /usr/bin/docker:/usr/bin/docker # for Ubuntu
+      # - /usr/local/bin/docker:/usr/local/bin/docker # for MacOS
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp # for cwltool
-      - .:/opt/stayhome_wes
+      - ${PWD}/stayhome_wes:/opt/stayhome_wes/stayhome_wes
     ports:
       - 8080:8080
     restart: always
