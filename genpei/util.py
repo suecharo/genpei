@@ -7,7 +7,7 @@ from typing import List
 from cwltool.update import ALLUPDATES
 from cwltool.utils import versionstring
 
-from stayhome_wes.type import ServiceInfo
+from genpei.type import ServiceInfo
 
 SRC_DIR = Path(__file__).parent.resolve()
 SERVICE_INFO_JSON: Path = SRC_DIR.joinpath("service-info.json").resolve()

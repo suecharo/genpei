@@ -1,4 +1,4 @@
-# stayhome_wes
+# stayhome_wes a.k.a Genpei(源平)
 
 ![Lint and Style Check](https://github.com/suecharo/stayhome_wes/workflows/Lint%20and%20Style%20Check/badge.svg)
 

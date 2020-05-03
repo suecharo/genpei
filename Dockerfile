@@ -8,7 +8,7 @@ RUN apt update && \
     apt clean &&\
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/stayhome_wes
+WORKDIR /opt/genpei
 
 COPY requirements.txt .
 

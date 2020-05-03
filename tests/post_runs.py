@@ -5,7 +5,7 @@ import json
 import requests
 from requests import Response
 
-from stayhome_wes.type import RunRequest
+from genpei.type import RunRequest
 
 URL = "localhost:8080"
 

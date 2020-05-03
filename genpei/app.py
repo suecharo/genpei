@@ -2,7 +2,7 @@
 # coding: utf-8
 from flask import Flask
 
-from stayhome_wes.controller import app_bp
+from genpei.controller import app_bp
 
 
 def create_app() -> Flask:

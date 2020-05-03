@@ -4,17 +4,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: stayhome_wes
-    container_name: stayhome_wes
+    image: genpei
+    container_name: genpei
     volumes:
       - /usr/bin/docker:/usr/bin/docker # for Ubuntu
       # - /usr/local/bin/docker:/usr/local/bin/docker # for MacOS
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp # for cwltool
-      - ${PWD}/data:/opt/stayhome_wes/data
-      - ${PWD}/run:/opt/stayhome_wes/run
-      - ${PWD}/stayhome_wes:/opt/stayhome_wes/stayhome_wes
-      - ${PWD}/tests:/opt/stayhome_wes/tests
+      - ${PWD}/data:/opt/genpei/data
+      - ${PWD}/run:/opt/genpei/run
+      - ${PWD}/genpei:/opt/genpei/genpei
+      - ${PWD}/tests:/opt/genpei/tests
     ports:
       - 8080:8080
     restart: always

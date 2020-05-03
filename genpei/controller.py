@@ -5,11 +5,11 @@ from typing import Any, Dict
 from flask import Blueprint, Response, request
 from flask.json import jsonify
 
-from stayhome_wes.run import validate_run_request
-from stayhome_wes.type import ServiceInfo
-from stayhome_wes.util import CWL_VERSIONS, CWLTOOL_VERSION, read_service_info
+from genpei.run import validate_run_request
+from genpei.type import ServiceInfo
+from genpei.util import CWL_VERSIONS, CWLTOOL_VERSION, read_service_info
 
-app_bp = Blueprint("stayhome_wes", __name__)
+app_bp = Blueprint("genpei", __name__)
 
 
 @app_bp.route("/service-info", methods=["GET"])

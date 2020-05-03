@@ -18,23 +18,23 @@ def read_requirements_txt() -> List[str]:
 
 
 def main() -> None:
-    setup(name="stayhome_wes",
+    setup(name="genpei",
           version="1.0.0",
           description="Stayhome WES",
           author="suecharo",
           author_email="suehiro619@gmail.com",
-          url="https://github.com/suecharo/stayhome_wes",
+          url="https://github.com/suecharo/genpei",
           license="Apache2.0",
           python_requires=">=3.6",
           platforms="any",
           include_package_data=True,
           zip_safe=False,
           classifiers=["Programming Language :: Python"],
-          packages=["stayhome_wes"],
+          packages=["genpei"],
           install_requires=read_requirements_txt(),
           entry_points={
               "console_scripts": [
-                  "stayhome_wes=stayhome_wes.app:main",
+                  "genpei=genpei.app:main",
               ]
           }
           )

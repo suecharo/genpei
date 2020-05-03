@@ -11,9 +11,9 @@
   },
   "default_workflow_engine_parameters": [],
   "system_state_counts": {},
-  "auth_instructions_url": "https://github.com/suecharo/stayhome_wes",
-  "contact_info_url": "https://github.com/suecharo/stayhome_wes",
+  "auth_instructions_url": "https://github.com/suecharo/genpei",
+  "contact_info_url": "https://github.com/suecharo/genpei",
   "tags": {
-    "wes_name": "stayhome_wes"
+    "wes_name": "genpei"
   }
 }
