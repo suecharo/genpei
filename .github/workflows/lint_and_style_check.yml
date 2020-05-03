@@ -32,4 +32,4 @@ jobs:
           isort -c
       - name: Check with mypy
         run: |
-          mypy --strict --ignore-missing-imports .
+          mypy --strict --ignore-missing-imports --no-warn-unused-ignores .
