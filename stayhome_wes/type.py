@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 if version_info.minor < 8:
     from typing_extensions import TypedDict
 else:
-    from typing import TypedDict  # type: ignore
+    from typing import TypedDict  # mypy: ignore
 
 
 class DefaultWorkflowEngineParameter(TypedDict):
