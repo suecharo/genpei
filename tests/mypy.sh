@@ -8,4 +8,4 @@ BASE_DIR=$(
     pwd
 )
 
-mypy --strict --ignore-missing-imports ${BASE_DIR}
+mypy --strict --ignore-missing-imports --no-warn-unused-ignores ${BASE_DIR}

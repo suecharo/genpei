@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 # coding: utf-8
-import json
-from pathlib import Path
+from typing import Any, Dict
 
-from flask import Blueprint, Response
+from flask import Blueprint, Response, request
 from flask.json import jsonify
 
+from stayhome_wes.run import validate_run_request
 from stayhome_wes.type import ServiceInfo
+from stayhome_wes.util import CWL_VERSIONS, CWLTOOL_VERSION, read_service_info
 
 app_bp = Blueprint("stayhome_wes", __name__)
-
-SRC_DIR = Path(__file__).parent.resolve()
-SERVICE_INFO_JSON = SRC_DIR.joinpath("service-info.json").resolve()
 
 
 @app_bp.route("/service-info", methods=["GET"])
@@ -21,8 +19,10 @@ def get_service_info() -> Response:
     descriptor formats, versions supported, the WES API versions supported,
     and information about general service availability.
     """
-    with SERVICE_INFO_JSON.open(mode="r") as f:
-        res_body: ServiceInfo = json.load(f)
+    res_body: ServiceInfo = read_service_info()
+    res_body["workflow_engine_versions"]["cwltool"] = CWLTOOL_VERSION
+    res_body["workflow_type_versions"]["CWL"]["workflow_type_version"] = \
+        CWL_VERSIONS
     response: Response = jsonify(res_body)
     response.status_code = 200
 
@@ -52,6 +52,8 @@ def post_runs() -> Response:
     This endpoint creates a new workflow run and returns a `RunId` to monitor
     its progress.
     """
+    run_request: Dict[Any, Any] = dict(request.form)
+    validate_run_request(run_request)
     res_body = {"msg": "Post Runs"}
     response: Response = jsonify(res_body)
     response.status_code = 200

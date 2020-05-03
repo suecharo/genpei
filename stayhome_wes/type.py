@@ -223,11 +223,11 @@ class RunRequest(TypedDict):
         to attach files, the `workflow_url` may be a relative path to one of
         the attachments.
     """
-    workflow_params: Dict[Any, Any]
+    workflow_params: str
     workflow_type: str
     workflow_type_version: str
-    tags: Dict[str, str]
-    workflow_engine_parameters: Dict[str, str]
+    tags: str
+    workflow_engine_parameters: str
     workflow_url: str
 
 

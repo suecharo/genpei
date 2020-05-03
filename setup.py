@@ -5,13 +5,14 @@ from typing import List
 
 from setuptools import setup
 
-BASE_DIR = Path(__file__).parent.resolve()
-REQUIREMNTS_TEXT = BASE_DIR.joinpath("requirements.txt")
+BASE_DIR: Path = Path(__file__).parent.resolve()
+REQUIREMNTS_TEXT: Path = BASE_DIR.joinpath("requirements.txt")
 
 
 def read_requirements_txt() -> List[str]:
     with REQUIREMNTS_TEXT.open(mode="r") as f:
-        packages = [line for line in f.read().splitlines() if line != ""]
+        packages: List[str] = \
+            [str(line) for line in f.read().splitlines() if line != ""]
 
     return packages
 
