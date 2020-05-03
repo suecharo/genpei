@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 # coding: utf-8
 from enum import Enum, auto
-from typing import Any, Dict, List, TypedDict
+from sys import version_info
+from typing import Any, Dict, List
+
+if version_info.minor < 8:
+    from typing_extensions import TypedDict
+else:
+    from typing import TypedDict  # type: ignore
 
 
 class DefaultWorkflowEngineParameter(TypedDict):

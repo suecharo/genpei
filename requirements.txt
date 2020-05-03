@@ -3,3 +3,4 @@ flake8
 flask
 isort
 mypy
+typing_extensions
