@@ -1,5 +1,7 @@
 # stayhome_wes
 
+![Lint and Style Check](https://github.com/suecharo/stayhome_wes/workflows/Lint%20and%20Style%20Check/badge.svg)
+
 - 後から追記していく
 - 英語に書き直す (はず)
 
