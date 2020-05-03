@@ -1,2 +1,5 @@
 cwltool
+flake8
 flask
+isort
+mypy

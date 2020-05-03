@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 # coding: utf-8
 from pathlib import Path
+from typing import List
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 BASE_DIR = Path(__file__).parent.resolve()
 REQUIREMNTS_TEXT = BASE_DIR.joinpath("requirements.txt")
 
 
-def read_requirements_txt():
+def read_requirements_txt() -> List[str]:
     with REQUIREMNTS_TEXT.open(mode="r") as f:
         packages = [line for line in f.read().splitlines() if line != ""]
 
     return packages
 
 
-def main():
+def main() -> None:
     setup(name="stayhome_wes",
           version="1.0.0",
           description="Stayhome WES",

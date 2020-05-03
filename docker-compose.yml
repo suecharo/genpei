@@ -11,7 +11,9 @@ services:
       # - /usr/local/bin/docker:/usr/local/bin/docker # for MacOS
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp # for cwltool
+      - ${PWD}/run:/opt/stayhome_wes/run
       - ${PWD}/stayhome_wes:/opt/stayhome_wes/stayhome_wes
+      - ${PWD}/tests:/opt/stayhome_wes/tests
     ports:
       - 8080:8080
     restart: always
