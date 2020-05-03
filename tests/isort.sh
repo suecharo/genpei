@@ -8,4 +8,5 @@ BASE_DIR=$(
     pwd
 )
 
-isort $(find ${BASE_DIR} -name '*.py')
+cd ${BASE_DIR}
+isort

@@ -1,0 +1,17 @@
+{
+  "workflow_type_versions": {
+    "CWL": {
+      "workflow_type_version": ["v1.0", "v1.1"]
+    }
+  },
+  "supported_we_versions": ["1.0.0"],
+  "supported_filesystem_protocols": ["http", "https", "file"],
+  "workflow_engine_versions": {
+    "cwltool": "3.0.20200324120055"
+  },
+  "default_workflow_engine_parameters": [],
+  "system_state_counts": {},
+  "auth_instructions_url": "",
+  "contact_info_url": "",
+  "tags": {}
+}

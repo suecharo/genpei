@@ -1,4 +1,4 @@
-cwltool
+cwltool==3.0.20200324120055
 flake8
 flask
 isort

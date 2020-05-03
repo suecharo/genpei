@@ -8,4 +8,4 @@ BASE_DIR=$(
     pwd
 )
 
-flake8 ${BASE_DIR}
+flake8 ${BASE_DIR} --count --show-source --statistics
