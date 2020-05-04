@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 # coding: utf-8
-from typing import Any, Dict
+from typing import cast
 
 from flask import Blueprint, Response, request
 from flask.json import jsonify
 
-from genpei.run import validate_run_request
-from genpei.type import ServiceInfo
-from genpei.util import CWL_VERSIONS, CWLTOOL_VERSION, read_service_info
+from genpei.const import GET_STATUS_CODE, POST_STATUS_CODE
+from genpei.run import (dump_wf_params, fork_run, prepare_exe_dir,
+                        prepare_run_dir, set_state, validate_run_request,
+                        validate_wf_type)
+from genpei.type import RunRequest, ServiceInfo, State
+from genpei.util import generate_run_id, read_service_info
 
 app_bp = Blueprint("genpei", __name__)
 
@@ -20,11 +23,8 @@ def get_service_info() -> Response:
     and information about general service availability.
     """
     res_body: ServiceInfo = read_service_info()
-    res_body["workflow_engine_versions"]["cwltool"] = CWLTOOL_VERSION
-    res_body["workflow_type_versions"]["CWL"]["workflow_type_version"] = \
-        CWL_VERSIONS
     response: Response = jsonify(res_body)
-    response.status_code = 200
+    response.status_code = GET_STATUS_CODE
 
     return response
 
@@ -41,7 +41,7 @@ def get_runs() -> Response:
     """
     res_body = {"msg": "Get Runs"}
     response: Response = jsonify(res_body)
-    response.status_code = 200
+    response.status_code = GET_STATUS_CODE
 
     return response
 
@@ -52,11 +52,20 @@ def post_runs() -> Response:
     This endpoint creates a new workflow run and returns a `RunId` to monitor
     its progress.
     """
-    run_request: Dict[Any, Any] = dict(request.form)
+    run_request: RunRequest = cast(RunRequest, dict(request.form))
     validate_run_request(run_request)
-    res_body = {"msg": "Post Runs"}
-    response: Response = jsonify(res_body)
-    response.status_code = 200
+    validate_wf_type(run_request["workflow_type"],
+                     run_request["workflow_type_version"])
+    run_id: str = generate_run_id()
+    prepare_run_dir(run_id, run_request)
+    dump_wf_params(run_id, run_request)
+    prepare_exe_dir(run_id, request.files)
+    set_state(run_id, State.QUEUED)
+    fork_run(run_id, run_request)
+    response: Response = jsonify({
+        "run_id": run_id
+    })
+    response.status_code = POST_STATUS_CODE
 
     return response
 
@@ -73,7 +82,7 @@ def get_runs_id(run_id: str) -> Response:
     """
     res_body = {"msg": "Get Runs ID"}
     response: Response = jsonify(res_body)
-    response.status_code = 200
+    response.status_code = GET_STATUS_CODE
 
     return response
 
@@ -85,7 +94,7 @@ def post_runs_id_cancel(run_id: str) -> Response:
     """
     res_body = {"msg": "Post Runs ID Cancel"}
     response: Response = jsonify(res_body)
-    response.status_code = 200
+    response.status_code = POST_STATUS_CODE
 
     return response
 
@@ -99,6 +108,6 @@ def get_runs_id_status(run_id: str) -> Response:
     """
     res_body = {"msg": "Get Runs ID Status"}
     response: Response = jsonify(res_body)
-    response.status_code = 200
+    response.status_code = GET_STATUS_CODE
 
     return response

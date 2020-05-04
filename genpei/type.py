@@ -222,6 +222,17 @@ class RunRequest(TypedDict):
         The workflow CWL or WDL document. When `workflow_attachments` is used
         to attach files, the `workflow_url` may be a relative path to one of
         the attachments.
+    workflow_attachment:
+        The workflow_attachment array may be used to upload files that are
+        required to execute the workflow, including the primary workflow,
+        tools imported by the workflow, other files referenced by the workflow,
+        or files which are part of the input. The implementation should stage
+        these files to a temporary directory and execute the workflow from
+        there. These parts must have a Content-Disposition header with a
+        "filename" provided for each part. Filenames may include
+        subdirectories, but must not include references to parent directories
+        with '..' -- implementations should guard against maliciously
+        constructed filenames.
     """
     workflow_params: str
     workflow_type: str

@@ -2,6 +2,7 @@
 # coding: utf-8
 from flask import Flask
 
+from genpei.const import DEFAULT_HOST, DEFAULT_PORT
 from genpei.controller import app_bp
 
 
@@ -14,7 +15,7 @@ def create_app() -> Flask:
 
 def main() -> None:
     app: Flask = create_app()
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host=DEFAULT_HOST, port=DEFAULT_PORT, debug=True)
 
 
 if __name__ == "__main__":
