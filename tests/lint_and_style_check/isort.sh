@@ -4,9 +4,9 @@ SCRIPT_DIR=$(
     pwd
 )
 BASE_DIR=$(
-    cd ${SCRIPT_DIR}/..
+    cd ${SCRIPT_DIR}/../..
     pwd
 )
 
 cd ${BASE_DIR}
-isort
+isort -y

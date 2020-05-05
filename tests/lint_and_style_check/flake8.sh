@@ -4,7 +4,7 @@ SCRIPT_DIR=$(
     pwd
 )
 BASE_DIR=$(
-    cd ${SCRIPT_DIR}/..
+    cd ${SCRIPT_DIR}/../..
     pwd
 )
 
