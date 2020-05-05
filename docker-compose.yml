@@ -11,11 +11,14 @@ services:
       # - /usr/local/bin/docker:/usr/local/bin/docker # for MacOS
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp # for cwltool
-      - ${PWD}/genpei:/app/genpei
-      - ${PWD}/mount:/mount
-      - ${PWD}/run:/app/run
-      - ${PWD}/tests:/app/tests
+      # Mounting PWD in the container for cwltool
+      - ${PWD}/entrypoint.sh:${PWD}/entrypoint.sh
+      - ${PWD}/genpei:${PWD}/genpei
+      - ${PWD}/mount:${PWD}/mount
+      - ${PWD}/run:${PWD}/run
+      - ${PWD}/tests:${PWD}/tests
     ports:
       - 8080:8080
     restart: always
-    command: ["tail", "-f", "/dev/null"]
+    working_dir: ${PWD}
+    command: ["/bin/bash", "./entrypoint.sh"]
