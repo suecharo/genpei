@@ -8,12 +8,11 @@ RUN apt update && \
     apt clean &&\
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/genpei
+WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install -U setuptools && \
-    pip install -U pip wheel && \
+RUN pip install -U pip setuptools wheel && \
     pip install -r requirements.txt
 
 COPY . .

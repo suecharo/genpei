@@ -11,10 +11,10 @@ services:
       # - /usr/local/bin/docker:/usr/local/bin/docker # for MacOS
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp:/tmp # for cwltool
-      - ${PWD}/data:/opt/genpei/data
-      - ${PWD}/run:/opt/genpei/run
-      - ${PWD}/genpei:/opt/genpei/genpei
-      - ${PWD}/tests:/opt/genpei/tests
+      - ${PWD}/genpei:/app/genpei
+      - ${PWD}/mount:/mount
+      - ${PWD}/run:/app/run
+      - ${PWD}/tests:/app/tests
     ports:
       - 8080:8080
     restart: always
