@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # coding: utf-8
+import json
 from typing import cast
 
 from flask import Blueprint, Response, request
 from flask.json import jsonify
 
 from genpei.const import GET_STATUS_CODE, POST_STATUS_CODE
-from genpei.run import (dump_wf_params, fork_run, prepare_exe_dir,
-                        prepare_run_dir, set_state, validate_run_request,
-                        validate_wf_type)
+from genpei.run import (fork_run, prepare_exe_dir, validate_run_request,
+                        validate_wf_type, write_file)
 from genpei.type import RunRequest, ServiceInfo, State
 from genpei.util import generate_run_id, read_service_info
 
@@ -57,10 +57,10 @@ def post_runs() -> Response:
     validate_wf_type(run_request["workflow_type"],
                      run_request["workflow_type_version"])
     run_id: str = generate_run_id()
-    prepare_run_dir(run_id, run_request)
-    dump_wf_params(run_id, run_request)
+    write_file(run_id, "run_request", json.dumps(run_request, indent=2))
+    write_file(run_id, "wf_params", run_request["workflow_params"])
     prepare_exe_dir(run_id, request.files)
-    set_state(run_id, State.QUEUED)
+    write_file(run_id, "state", State.QUEUED.name)
     fork_run(run_id, run_request)
     response: Response = jsonify({
         "run_id": run_id

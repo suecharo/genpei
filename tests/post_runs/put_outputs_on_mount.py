@@ -40,7 +40,7 @@ def main() -> None:
             "workflow_name": "trimming_and_qc_remote"
         }),
         "workflow_engine_parameters": json.dumps({
-            "--outdir": MOUNT_DIR.joinpath("outputs")
+            "--outdir": str(MOUNT_DIR.joinpath("outputs"))
         }),
         "workflow_url": "https://raw.githubusercontent.com/suecharo/" +
                         "genpei/master/tests/resources/" +

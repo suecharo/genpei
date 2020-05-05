@@ -3,21 +3,21 @@
 import json
 import multiprocessing as mp
 import os
-import sys
 from datetime import datetime
 from multiprocessing.context import BaseContext
 from multiprocessing.process import BaseProcess
 from pathlib import Path
+from traceback import print_exc
 from typing import Dict, List, Optional
 
-from cwltool.main import run as cwltool_run
+from cwltool.main import run as cwltool
 from flask import abort
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-from genpei.const import DATE_FORMAT, FILE_NAMES
+from genpei.const import DATE_FORMAT
 from genpei.type import RunRequest, ServiceInfo, State
-from genpei.util import get_run_dir, read_service_info
+from genpei.util import get_path, read_service_info
 
 
 def validate_run_request(run_request: RunRequest) -> None:
@@ -52,38 +52,22 @@ def validate_wf_type(wf_type: str, wf_type_version: str) -> None:
               "the available workflow_type_versions.")
 
 
-def prepare_run_dir(run_id: str, run_request: RunRequest) -> None:
-    run_dir: Path = get_run_dir(run_id)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    run_request_file = run_dir.joinpath(FILE_NAMES["run_request"])
-    with run_request_file.open(mode="w") as f:
-        f.write(json.dumps(run_request, indent=2))
+def write_file(run_id: str, file_type: str, content: str) -> None:
+    file: Path = get_path(run_id, file_type)
+    file.parent.mkdir(parents=True, exist_ok=True)
+    with file.open(mode="w") as f:
+        f.write(content)
 
 
 def prepare_exe_dir(run_id: str,
                     request_files: Dict[str, FileStorage]) \
         -> None:
-    run_dir: Path = get_run_dir(run_id)
-    exe_dir: Path = run_dir.joinpath(FILE_NAMES["exe_dir"])
+    exe_dir: Path = get_path(run_id, "exe")
     exe_dir.mkdir(parents=True, exist_ok=True)
     for file in request_files.values():
         if file.filename != "":
             filename: str = secure_filename(file.filename)
             file.save(exe_dir.joinpath(filename))  # type: ignore
-
-
-def dump_wf_params(run_id: str, run_request: RunRequest) -> None:
-    run_dir: Path = get_run_dir(run_id)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    with run_dir.joinpath(FILE_NAMES["wf_params"]).open(mode="w") as f:
-        f.write(run_request["workflow_params"])
-
-
-def set_state(run_id: str, state: State) -> None:
-    run_dir: Path = get_run_dir(run_id)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    with run_dir.joinpath(FILE_NAMES["state"]).open(mode="w") as f:
-        f.write(state.name)
 
 
 def flatten_wf_engine_params(wf_engine_params: str) -> List[str]:
@@ -102,34 +86,6 @@ def flatten_wf_engine_params(wf_engine_params: str) -> List[str]:
     return params
 
 
-def write_start_time(run_id: str) -> None:
-    run_dir: Path = get_run_dir(run_id)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    with run_dir.joinpath(FILE_NAMES["start_time"]).open(mode="w") as f:
-        f.write(datetime.now().strftime(DATE_FORMAT))
-
-
-def write_end_time(run_id: str) -> None:
-    run_dir: Path = get_run_dir(run_id)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    with run_dir.joinpath(FILE_NAMES["end_time"]).open(mode="w") as f:
-        f.write(datetime.now().strftime(DATE_FORMAT))
-
-
-def write_pid(run_id: str, pid: int) -> None:
-    run_dir: Path = get_run_dir(run_id)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    with run_dir.joinpath(FILE_NAMES["pid"]).open(mode="w") as f:
-        f.write(str(pid))
-
-
-def write_exit_code(run_id: str, exit_code: int) -> None:
-    run_dir: Path = get_run_dir(run_id)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    with run_dir.joinpath(FILE_NAMES["exit_code"]).open(mode="w") as f:
-        f.write(str(exit_code))
-
-
 def fork_run(run_id: str, run_request: RunRequest) -> None:
     ctx: BaseContext = mp.get_context("spawn")
     process: BaseProcess = \
@@ -139,48 +95,41 @@ def fork_run(run_id: str, run_request: RunRequest) -> None:
 
 def forked_process(run_id: str, run_request: RunRequest) -> None:
     try:
-        set_state(run_id, State.INITIALIZING)
+        write_file(run_id, "state", State.INITIALIZING.name)
         wf_engine_params: List[str] = \
             flatten_wf_engine_params(run_request["workflow_engine_parameters"])
+        if "--outdir" not in wf_engine_params:
+            wf_engine_params.append("--outdir")
+            wf_engine_params.append(str(get_path(run_id, "output")))
         wf_url: str = run_request["workflow_url"]
-        wf_params_file: Path = \
-            get_run_dir(run_id).joinpath(FILE_NAMES["wf_params"])
-        run_dir: Path = get_run_dir(run_id)
-        os.chdir(run_dir.joinpath(FILE_NAMES["exe_dir"]))
+        wf_params_file: Path = get_path(run_id, "wf_params")
+        all_args: List[str] = [*wf_engine_params, wf_url, str(wf_params_file)]
+        write_file(run_id, "cmd", " ".join(["cwltool", *all_args]))
+        os.chdir(get_path(run_id, "exe"))
         ctx: BaseContext = mp.get_context("spawn")
-        process: BaseProcess = ctx.Process(target=run_cwltool,
-                                           args=(
-                                               run_id,
-                                               wf_engine_params,
-                                               wf_url,
-                                               wf_params_file
-                                           ))
-        set_state(run_id, State.RUNNING)
-        write_start_time(run_id)
+        process: BaseProcess = \
+            ctx.Process(target=run_cwltool, args=(run_id, all_args))
+        write_file(run_id, "state", State.RUNNING.name)
+        write_file(run_id, "start_time", datetime.now().strftime(DATE_FORMAT))
         process.start()
         pid: Optional[int] = process.pid
         if pid is not None:
-            write_pid(run_id, pid)
+            write_file(run_id, "pid", str(pid))
         process.join()  # blocking
-        write_end_time(run_id)
+        write_file(run_id, "end_time", datetime.now().strftime(DATE_FORMAT))
         exit_code: Optional[int] = process.exitcode
         if exit_code is not None:
-            write_exit_code(run_id, exit_code)
+            write_file(run_id, "exit_code", str(exit_code))
         if exit_code == 0:
-            set_state(run_id, State.COMPLETE)
+            write_file(run_id, "state", State.COMPLETE.name)
         else:
-            set_state(run_id, State.EXECUTOR_ERROR)
+            write_file(run_id, "state", State.EXECUTOR_ERROR.name)
     except Exception:
-        set_state(run_id, State.SYSTEM_ERROR)
+        write_file(run_id, "state", State.SYSTEM_ERROR.name)
+        print_exc(file=get_path(run_id, "sys_error").open(mode="w"))
 
 
-def run_cwltool(run_id: str,
-                wf_engine_params: List[str],
-                wf_url: str,
-                wf_params_file: Path) -> None:
-    run_dir: Path = get_run_dir(run_id)
-    sys.stdout = \
-        run_dir.joinpath(FILE_NAMES["stdout"]).open(mode="w", buffering=1)
-    sys.stderr = \
-        run_dir.joinpath(FILE_NAMES["stderr"]).open(mode="w", buffering=1)
-    cwltool_run(*wf_engine_params, wf_url, str(wf_params_file))
+def run_cwltool(run_id: str, all_args: List[str]) -> None:
+    cwltool(all_args,
+            stdout=get_path(run_id, "stdout").open(mode="w", buffering=1),
+            stderr=get_path(run_id, "stderr").open(mode="w", buffering=1))
