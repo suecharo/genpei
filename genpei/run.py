@@ -2,6 +2,8 @@
 # coding: utf-8
 import multiprocessing as mp
 import os
+import signal
+import time
 from datetime import datetime
 from multiprocessing.context import BaseContext
 from multiprocessing.process import BaseProcess
@@ -14,11 +16,11 @@ from flask import abort
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-from genpei.const import DATE_FORMAT
+from genpei.const import CANCEL_TIMEOUT, DATE_FORMAT
 from genpei.type import Log, RunLog, RunRequest, ServiceInfo, State
-from genpei.util import (flatten_wf_engine_params, get_outputs, get_path,
-                         get_state, read_cmd, read_file, read_run_request,
-                         read_service_info, write_file)
+from genpei.util import (flatten_wf_engine_params, get_all_run_ids,
+                         get_outputs, get_path, get_state, read_cmd, read_file,
+                         read_run_request, read_service_info, write_file)
 
 
 def validate_run_request(run_request: RunRequest) -> None:
@@ -138,3 +140,29 @@ def get_log(run_id: str) -> Log:
     }
 
     return log
+
+
+def validate_run_id(run_id: str) -> None:
+    all_run_ids: List[str] = get_all_run_ids()
+    if run_id not in all_run_ids:
+        abort(404,
+              f"The run_id {run_id} you requested does not exist, " +
+              "please check with GET /runs.")
+
+
+def cancel_run(run_id: str) -> None:
+    state: State = get_state(run_id)
+    if state == State.RUNNING:
+        write_file(run_id, "state", State.CANCELING.name)
+        try:
+            pid: int = int(read_file(run_id, "pid"))
+            os.kill(pid, signal.SIGTERM)
+            count: int = 0
+            while count < CANCEL_TIMEOUT:
+                time.sleep(1)
+                count += 1
+                if get_state(run_id) != State.RUNNING:
+                    write_file(run_id, "state", State.CANCELED.name)
+                    break
+        except Exception:
+            write_file(run_id, "state", State.UNKNOWN.name)

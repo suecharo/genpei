@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import json
-from typing import List, cast
+from typing import cast
 
-from flask import Blueprint, Response, abort, request
+from flask import Blueprint, Response, request
 from flask.json import jsonify
 
 from genpei.const import GET_STATUS_CODE, POST_STATUS_CODE
-from genpei.run import (fork_run, get_run_log, prepare_exe_dir,
-                        validate_run_request, validate_wf_type)
-from genpei.type import (RunListResponse, RunLog, RunRequest, RunStatus,
+from genpei.run import (cancel_run, fork_run, get_run_log, prepare_exe_dir,
+                        validate_run_id, validate_run_request,
+                        validate_wf_type)
+from genpei.type import (RunId, RunListResponse, RunLog, RunRequest, RunStatus,
                          ServiceInfo, State)
 from genpei.util import (generate_run_id, get_all_run_ids, get_state,
                          read_service_info, write_file)
@@ -90,11 +91,7 @@ def get_runs_id(run_id: str) -> Response:
     retrieved, and the overall state of the workflow run (e.g. RUNNING, see
     the State section).
     """
-    all_run_ids: List[str] = get_all_run_ids()
-    if run_id not in all_run_ids:
-        abort(404,
-              f"The run_id {run_id} you requested does not exist, " +
-              "please check with GET /runs.")
+    validate_run_id(run_id)
     res_body: RunLog = get_run_log(run_id)
     response: Response = jsonify(res_body)
     response.status_code = GET_STATUS_CODE
@@ -107,7 +104,9 @@ def post_runs_id_cancel(run_id: str) -> Response:
     """
     Cancel a running workflow.
     """
-    res_body = {"msg": "Post Runs ID Cancel"}
+    validate_run_id(run_id)
+    cancel_run(run_id)
+    res_body: RunId = {"run_id": run_id}
     response: Response = jsonify(res_body)
     response.status_code = POST_STATUS_CODE
 
@@ -121,11 +120,7 @@ def get_runs_id_status(run_id: str) -> Response:
     status of the running workflow, returning a simple result with the overall
     state of the workflow run (e.g. RUNNING, see the State section).
     """
-    all_run_ids: List[str] = get_all_run_ids()
-    if run_id not in all_run_ids:
-        abort(404,
-              f"The run_id {run_id} you requested does not exist, " +
-              "please check with GET /runs.")
+    validate_run_id(run_id)
     res_body: RunStatus = {
         "run_id": run_id,
         "state": get_state(run_id).name  # type: ignore

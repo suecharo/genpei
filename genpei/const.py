@@ -25,3 +25,5 @@ RUN_DIR_STRUCTURE: Dict[str, str] = {
 }
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
+
+CANCEL_TIMEOUT = 10
