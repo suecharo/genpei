@@ -54,7 +54,7 @@ def main() -> None:
         requests.post(f"http://{URL}/runs", data=data, files=files)
 
     print(response.status_code)
-    print(response.content)
+    print(json.dumps(json.loads(response.text), indent=2))
 
 
 if __name__ == "__main__":

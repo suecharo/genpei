@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # coding: utf-8
-import json
 import multiprocessing as mp
 import os
 from datetime import datetime
@@ -16,8 +15,10 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 from genpei.const import DATE_FORMAT
-from genpei.type import RunRequest, ServiceInfo, State
-from genpei.util import get_path, read_service_info
+from genpei.type import Log, RunLog, RunRequest, ServiceInfo, State
+from genpei.util import (flatten_wf_engine_params, get_outputs, get_path,
+                         get_state, read_cmd, read_file, read_run_request,
+                         read_service_info, write_file)
 
 
 def validate_run_request(run_request: RunRequest) -> None:
@@ -52,13 +53,6 @@ def validate_wf_type(wf_type: str, wf_type_version: str) -> None:
               "the available workflow_type_versions.")
 
 
-def write_file(run_id: str, file_type: str, content: str) -> None:
-    file: Path = get_path(run_id, file_type)
-    file.parent.mkdir(parents=True, exist_ok=True)
-    with file.open(mode="w") as f:
-        f.write(content)
-
-
 def prepare_exe_dir(run_id: str,
                     request_files: Dict[str, FileStorage]) \
         -> None:
@@ -68,22 +62,6 @@ def prepare_exe_dir(run_id: str,
         if file.filename != "":
             filename: str = secure_filename(file.filename)
             file.save(exe_dir.joinpath(filename))  # type: ignore
-
-
-def flatten_wf_engine_params(wf_engine_params: str) -> List[str]:
-    wf_engine_params_obj = json.loads(wf_engine_params)
-    params: List[str] = []
-    for key, val in wf_engine_params_obj.items():
-        params.append(key)
-        if isinstance(val, list):
-            params.append(",".join(val))
-        else:
-            try:
-                params.append(str(val))
-            except Exception:
-                pass  # TODO Error Handling
-
-    return params
 
 
 def fork_run(run_id: str, run_request: RunRequest) -> None:
@@ -133,3 +111,30 @@ def run_cwltool(run_id: str, all_args: List[str]) -> None:
     cwltool(all_args,
             stdout=get_path(run_id, "stdout").open(mode="w", buffering=1),
             stderr=get_path(run_id, "stderr").open(mode="w", buffering=1))
+
+
+def get_run_log(run_id: str) -> RunLog:
+    run_log: RunLog = {
+        "run_id": run_id,
+        "request": read_run_request(run_id),
+        "state": get_state(run_id).name,  # type: ignore
+        "run_log": get_log(run_id),
+        "task_logs": [],
+        "outputs": get_outputs(run_id)
+    }
+
+    return run_log
+
+
+def get_log(run_id: str) -> Log:
+    log: Log = {
+        "name": "",
+        "cmd": read_cmd(run_id),
+        "start_time": read_file(run_id, "start_time"),
+        "end_time": read_file(run_id, "end_time"),
+        "stdout": read_file(run_id, "stdout"),
+        "stderr": read_file(run_id, "stderr"),
+        "exit_code": int(read_file(run_id, "exit_code"))
+    }
+
+    return log

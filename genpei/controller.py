@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import json
-from typing import cast
+from typing import List, cast
 
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response, abort, request
 from flask.json import jsonify
 
 from genpei.const import GET_STATUS_CODE, POST_STATUS_CODE
-from genpei.run import (fork_run, prepare_exe_dir, validate_run_request,
-                        validate_wf_type, write_file)
-from genpei.type import RunRequest, ServiceInfo, State
-from genpei.util import generate_run_id, read_service_info
+from genpei.run import (fork_run, get_run_log, prepare_exe_dir,
+                        validate_run_request, validate_wf_type)
+from genpei.type import RunLog, RunRequest, ServiceInfo, State
+from genpei.util import (generate_run_id, get_all_run_ids, read_service_info,
+                         write_file)
 
 app_bp = Blueprint("genpei", __name__)
 
@@ -80,7 +81,12 @@ def get_runs_id(run_id: str) -> Response:
     retrieved, and the overall state of the workflow run (e.g. RUNNING, see
     the State section).
     """
-    res_body = {"msg": "Get Runs ID"}
+    all_run_ids: List[str] = get_all_run_ids()
+    if run_id not in all_run_ids:
+        abort(404,
+              f"The run_id {run_id} you requested does not exist, " +
+              "please check with GET /runs.")
+    res_body: RunLog = get_run_log(run_id)
     response: Response = jsonify(res_body)
     response.status_code = GET_STATUS_CODE
 
