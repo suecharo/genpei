@@ -9,7 +9,8 @@ from flask.json import jsonify
 from genpei.const import GET_STATUS_CODE, POST_STATUS_CODE
 from genpei.run import (fork_run, get_run_log, prepare_exe_dir,
                         validate_run_request, validate_wf_type)
-from genpei.type import RunListResponse, RunLog, RunRequest, ServiceInfo, State
+from genpei.type import (RunListResponse, RunLog, RunRequest, RunStatus,
+                         ServiceInfo, State)
 from genpei.util import (generate_run_id, get_all_run_ids, get_state,
                          read_service_info, write_file)
 
@@ -120,7 +121,15 @@ def get_runs_id_status(run_id: str) -> Response:
     status of the running workflow, returning a simple result with the overall
     state of the workflow run (e.g. RUNNING, see the State section).
     """
-    res_body = {"msg": "Get Runs ID Status"}
+    all_run_ids: List[str] = get_all_run_ids()
+    if run_id not in all_run_ids:
+        abort(404,
+              f"The run_id {run_id} you requested does not exist, " +
+              "please check with GET /runs.")
+    res_body: RunStatus = {
+        "run_id": run_id,
+        "state": get_state(run_id).name  # type: ignore
+    }
     response: Response = jsonify(res_body)
     response.status_code = GET_STATUS_CODE
 
