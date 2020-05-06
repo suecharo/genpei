@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # coding: utf-8
+from pathlib import Path
 from typing import Dict
 
-DEFAULT_HOST: str = "0.0.0.0"
+DEFAULT_HOST: str = "127.0.0.1"
 DEFAULT_PORT: int = 8080
 GET_STATUS_CODE: int = 200
 POST_STATUS_CODE: int = 200
@@ -27,3 +28,8 @@ RUN_DIR_STRUCTURE: Dict[str, str] = {
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 CANCEL_TIMEOUT = 10
+
+SRC_DIR: Path = Path(__file__).parent.resolve()
+SERVICE_INFO_JSON: Path = \
+    SRC_DIR.joinpath(RUN_DIR_STRUCTURE["service_info"]).resolve()
+DEFAULT_RUN_DIR = SRC_DIR.parent.joinpath("run").resolve()

@@ -19,7 +19,11 @@ COPY . .
 
 RUN python3 setup.py develop
 
+ENV GENPEI_HOST 0.0.0.0
+ENV GENPEI_PORT 8080
+ENV GENPEI_DEBUG False
+
 EXPOSE 8080
 
 ENTRYPOINT ["tini", "--"]
-CMD ["tail", "-f", "/dev/null"]
+CMD ["genpei"]

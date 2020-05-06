@@ -5,21 +5,18 @@ import json
 import os
 import shlex
 from pathlib import Path
+from traceback import print_exc
 from typing import Dict, Iterable, List
 from uuid import uuid4
 
 from cwltool.update import ALLUPDATES
 from cwltool.utils import versionstring
+from flask import current_app
 
-from genpei.const import RUN_DIR_STRUCTURE
+from genpei.const import RUN_DIR_STRUCTURE, SERVICE_INFO_JSON
 from genpei.type import RunRequest, ServiceInfo, State
 
-SRC_DIR: Path = Path(__file__).parent.resolve()
-SERVICE_INFO_JSON: Path = \
-    SRC_DIR.joinpath(RUN_DIR_STRUCTURE["service_info"]).resolve()
-RUN_DIR: Path = SRC_DIR.parent.joinpath("run").resolve()
-
-CWLTOOL_VERSION: str = versionstring().strip()
+CWLTOOL_VERSION: str = versionstring().split(" ")[1]
 CWL_VERSIONS: List[str] = list(map(str, ALLUPDATES.keys()))
 
 
@@ -39,7 +36,9 @@ def generate_run_id() -> str:
 
 
 def get_run_dir(run_id: str) -> Path:
-    return RUN_DIR.joinpath(run_id[:2]).joinpath(run_id).resolve()
+    run_base_dir: Path = current_app.config["RUN_DIR"]
+
+    return run_base_dir.joinpath(run_id[:2]).joinpath(run_id).resolve()
 
 
 def get_path(run_id: str, file_type: str) -> Path:
@@ -71,14 +70,15 @@ def flatten_wf_engine_params(wf_engine_params: str) -> List[str]:
             try:
                 params.append(str(val))
             except Exception:
-                pass  # TODO Error Handling
+                print_exc()
 
     return params
 
 
 def get_all_run_ids() -> List[str]:
+    run_base_dir: Path = current_app.config["RUN_DIR"]
     run_requests: List[Path] = \
-        list(RUN_DIR.glob(f"**/{RUN_DIR_STRUCTURE['run_request']}"))
+        list(run_base_dir.glob(f"**/{RUN_DIR_STRUCTURE['run_request']}"))
     run_ids: List[str] = \
         [run_request.parent.name for run_request in run_requests]
 
@@ -103,7 +103,8 @@ def read_file(run_id: str, file_type: str) -> str:
         with file.open(mode="r") as f:
             return f.read()
     except Exception:
-        return ""  # TODO Error Handling
+        print_exc()
+        return ""
 
 
 def read_cmd(run_id: str) -> List[str]:
@@ -115,7 +116,8 @@ def read_cmd(run_id: str) -> List[str]:
             l_cmd: List[str] = shlex.split(cmd)
             return l_cmd
     except Exception:
-        return []  # TODO Error Handling
+        print_exc()
+        return []
 
 
 def get_outputs(run_id: str) -> Dict[str, str]:
@@ -132,7 +134,8 @@ def get_outputs(run_id: str) -> Dict[str, str]:
             outputs[output_file.name] = str(output_file)
         return outputs
     except Exception:
-        return {}  # TODO Error Handling
+        print_exc()
+        return {}
 
 
 def walk_all_files(dir: Path) -> Iterable[Path]:

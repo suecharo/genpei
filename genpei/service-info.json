@@ -4,7 +4,7 @@
       "workflow_type_version": []
     }
   },
-  "supported_we_versions": ["1.0.0"],
+  "supported_wes_versions": ["1.0.0"],
   "supported_filesystem_protocols": ["http", "https", "file"],
   "workflow_engine_versions": {
     "cwltool": ""

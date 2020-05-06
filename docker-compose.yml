@@ -17,6 +17,10 @@ services:
       - ${PWD}/mount:${PWD}/mount
       - ${PWD}/run:${PWD}/run
       - ${PWD}/tests:${PWD}/tests
+    environment:
+      - GENPEI_HOST=0.0.0.0
+      - GENPEI_PORT=8080
+      - GENPEI_DEBUG=False
     ports:
       - 8080:8080
     restart: always
