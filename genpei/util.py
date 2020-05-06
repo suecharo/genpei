@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
+import collections
 import json
 import os
 import shlex
@@ -28,6 +29,7 @@ def read_service_info() -> ServiceInfo:
     service_info["workflow_engine_versions"]["cwltool"] = CWLTOOL_VERSION
     service_info["workflow_type_versions"]["CWL"]["workflow_type_version"] = \
         CWL_VERSIONS
+    service_info["system_state_counts"] = count_state()  # type: ignore
 
     return service_info
 
@@ -138,3 +140,12 @@ def walk_all_files(dir: Path) -> Iterable[Path]:
         yield Path(root)
         for file in files:
             yield Path(root).joinpath(file)
+
+
+def count_state() -> Dict[str, int]:
+    run_ids: List[str] = get_all_run_ids()
+    count: Dict[str, int] = \
+        dict(collections.Counter(
+            [get_state(run_id).name for run_id in run_ids]))
+
+    return count
