@@ -9,9 +9,9 @@ from flask.json import jsonify
 from genpei.const import GET_STATUS_CODE, POST_STATUS_CODE
 from genpei.run import (fork_run, get_run_log, prepare_exe_dir,
                         validate_run_request, validate_wf_type)
-from genpei.type import RunLog, RunRequest, ServiceInfo, State
-from genpei.util import (generate_run_id, get_all_run_ids, read_service_info,
-                         write_file)
+from genpei.type import RunListResponse, RunLog, RunRequest, ServiceInfo, State
+from genpei.util import (generate_run_id, get_all_run_ids, get_state,
+                         read_service_info, write_file)
 
 app_bp = Blueprint("genpei", __name__)
 
@@ -40,7 +40,15 @@ def get_runs() -> Response:
     requested. To monitor a specific workflow run, use GetRunStatus or
     GetRunLog.
     """
-    res_body = {"msg": "Get Runs"}
+    res_body: RunListResponse = {
+        "runs": [],
+        "next_page_token": ""
+    }
+    for run_id in get_all_run_ids():
+        res_body["runs"].append({
+            "run_id": run_id,
+            "state": get_state(run_id).name  # type: ignore
+        })
     response: Response = jsonify(res_body)
     response.status_code = GET_STATUS_CODE
 
