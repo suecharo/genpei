@@ -27,3 +27,7 @@ outputs:
     type: File
     outputBinding:
       glob: "*_fastqc.html"
+  stdout: stdout
+  stderr: stderr
+stdout: fastqc-stdout.log
+stderr: fastqc-stderr.log

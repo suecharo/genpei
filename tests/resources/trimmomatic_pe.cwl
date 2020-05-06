@@ -60,3 +60,7 @@ outputs:
     type: File
     outputBinding:
       glob: $(inputs.fastq_1.nameroot).trimmed.2U.fq
+  stdout: stdout
+  stderr: stderr
+stdout: trimmomatic-pe-stdout.log
+stderr: trimmomatic-pe-stderr.log

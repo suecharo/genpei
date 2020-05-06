@@ -18,6 +18,8 @@ steps:
       fastq: fastq_1
     out:
       - qc_result
+      - stdout
+      - stderr
   qc_2:
     run: https://raw.githubusercontent.com/suecharo/genpei/master/tests/resources/fastqc.cwl
     in:
@@ -25,6 +27,8 @@ steps:
       fastq: fastq_2
     out:
       - qc_result
+      - stdout
+      - stderr
   trimming:
     run: https://raw.githubusercontent.com/suecharo/genpei/master/tests/resources/trimmomatic_pe.cwl
     in:
@@ -36,6 +40,8 @@ steps:
       - trimmed_fastq1U
       - trimmed_fastq2P
       - trimmed_fastq2U
+      - stdout
+      - stderr
 
 outputs:
   qc_result_1:
