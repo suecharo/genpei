@@ -22,7 +22,7 @@ def test_get_runs(tmpdir: LocalPath) -> None:
     app: Flask = create_app(Path(tmpdir))
     app.testing = True
     client: FlaskClient[Response] = app.test_client()
-    from .post_runs.test_access_remote_files import access_remote_files
+    from .post_runs_tests.test_access_remote_files import access_remote_files
     posts_res: Response = access_remote_files(client)
     posts_res_data: RunId = posts_res.get_json()
 
