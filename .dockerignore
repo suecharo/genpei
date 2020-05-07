@@ -4,5 +4,4 @@
 docker-compose.dev.yml
 docker-compose.yml
 Dockerfile
-mount
 run
