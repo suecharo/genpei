@@ -20,7 +20,8 @@ def read_requirements_txt() -> List[str]:
 def main() -> None:
     setup(name="genpei",
           version="1.0.0",
-          description="Stayhome WES",
+          description="Implementation of GA4GH WES OpenAPI specification " +
+                      "using cwltool.",
           author="suecharo",
           author_email="suehiro619@gmail.com",
           url="https://github.com/suecharo/genpei",

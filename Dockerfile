@@ -17,7 +17,7 @@ RUN pip install -U pip setuptools wheel && \
 
 COPY . .
 
-RUN python3 setup.py develop
+RUN python3 setup.py install
 
 ENV GENPEI_HOST 0.0.0.0
 ENV GENPEI_PORT 8080

@@ -1,8 +1,8 @@
-cwltool==3.0.20200324120055
+cwltool
 flake8
 flask
 isort
 mypy
+pytest
 requests
 typing_extensions
-pytest
