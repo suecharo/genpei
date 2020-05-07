@@ -5,6 +5,8 @@
 [![isort](https://github.com/suecharo/genpei/workflows/isort/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Aisort)
 [![mypy](https://github.com/suecharo/genpei/workflows/mypy/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Amypy)
 
+[Japanese Document](https://github.com/suecharo/genpei/blob/master/README_ja.md)
+
 Genpei (源平) is a standard implementation conforming to the [Global Alliance for Genomics and Health](https://www.ga4gh.org) (GA4GH) [Workflow Execution Service](https://github.com/ga4gh/workflow-execution-service-schemas) (WES) API specification.
 A simple and highly scalable REST API Server using [Flask](https://a2c.bitbucket.io/flask/) and [cwltool](https://github.com/common-workflow-language/cwltool) that follows the philosophy of Microservice.
 It supports the execution and management of Workflow written in [Common Workflow Language](https://www.commonwl.org) (CWL).
