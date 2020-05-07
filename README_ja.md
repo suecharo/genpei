@@ -5,13 +5,13 @@
 [![isort](https://github.com/suecharo/genpei/workflows/isort/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Aisort)
 [![mypy](https://github.com/suecharo/genpei/workflows/mypy/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Amypy)
 
-Genpei (源平) is a standard implementation conforming to the [Global Alliance for Genomics and Health](https://www.ga4gh.org) (GA4GH) [Workflow Execution Service](https://github.com/ga4gh/workflow-execution-service-schemas) (WES) API specification.
-A simple and highly scalable REST API Server using [Flask](https://a2c.bitbucket.io/flask/) and [cwltool](https://github.com/common-workflow-language/cwltool) that follows the philosophy of Microservice.
-It supports the execution and management of Workflow written in [Common Workflow Language](https://www.commonwl.org) (CWL).
+Genpei (源平) は、[Global Alliance for Genomics and Health](https://www.ga4gh.org) (GA4GH) により制定された [Workflow Execution Service](https://github.com/ga4gh/workflow-execution-service-schemas) (WES) API 定義に準拠した標準実装です。
+Microservice の思想に則り、[Flask](https://a2c.bitbucket.io/flask/) と [cwltool](https://github.com/common-workflow-language/cwltool) を用いており、[Common Workflow Language](https://www.commonwl.org) を用いて作られた、シンプルかつ拡張性の高い REST API Server です。
+[Common Workflow Language](https://www.commonwl.org) (CWL) により書かれた Workflow の実行や管理をサポートします。
 
 ## Install and Run
 
-Python 3.6 or higher.
+Python 3.6 以上を想定しています。
 
 ```bash
 $ pip3 install genpei
@@ -20,9 +20,9 @@ $ genpei
 
 ### Docker
 
-We also expect to run using Docker.
-Because of the compatibility of cwltool and Docker-in-Docker (DinD), you have to mount `docker.dock`, `/tmp`, etc.
-Please check the documentation in [DockerHub - cwltool](https://hub.docker.com/r/commonworkflowlanguage/cwltool/) for more information.
+Docker の利用も想定しています。
+cwltool と Docker-in-Docker (DinD) の相性より、`docker.dock` や `/tmp` などを mount しなければなりません。
+詳しくは、[DockerHub - cwltool](https://hub.docker.com/r/commonworkflowlanguage/cwltool/) のドキュメントを確認してください。
 
 ```bash
 $ docker-compose up -d --build
@@ -31,9 +31,9 @@ $ docker-compose exec app genpei
 
 ## Usage
 
-As API specifications, please check [GitHub - GA4GH WES](https://github.com/ga4gh/workflow-execution-service-schemas) and [SwaggerUI - GA4GH WES](https://suecharo.github.io/genpei-swagger-ui/dist/).
+API 仕様は、[GitHub - GA4GH WES](https://github.com/ga4gh/workflow-execution-service-schemas) や [SwaggerUI - GA4GH WES](https://suecharo.github.io/genpei-swagger-ui/dist/) を確認してください。
 
-As the simplest example of a REST API Request, here is the result of a `GET /service-info`.
+一番簡単な REST API Request として、`GET /service-info` の例を挙げます。
 
 ```bash
 $ curl -X GET localhost:8080/service-info
@@ -70,7 +70,7 @@ $ curl -X GET localhost:8080/service-info
 }
 ```
 
-Startup Option (`--host` and `--port`) of Genpei allows you to change the startup host and port.
+Genpei の起動 Option (`--host` and `--port`) を指定することで、起動 Host や Port を変更できます。
 
 ```bash
 $ genpei --help
@@ -89,9 +89,9 @@ optional arguments:
 $ genpei --host 0.0.0.0 --port 5000
 ```
 
-Genpei manages submitted workflow files, workflow parameters, output files, etc. on the FileSystem. It is called `Run dir`. The location of default is `./run`. You can change the location of `Run dir` by specifying the startup option (`-r`).
+Genpei は、投入された workflow file や workflow parameter、output files などを FileSystem 上で管理しています。System 上では Run dir と呼んでおり、default は `./run` です。Run dir の場所は、起動 Option (`-r`) で指定することで、変更できます。
 
-The run dir structure looks like the following. There are various files related to each run. Initialization and deletion of each run can be done by physical deletion using `rm`.
+Run dir 構造は、以下のようになっており、それぞれの run に関わる様々な file 群が配置されています。初期化やそれぞれの run の削除は `rm` を用いた物理的な削除により行えます。
 
 ```bash
 $ tree run
@@ -129,18 +129,20 @@ $ tree run
     └── ...
 ```
 
-The execution of `POST /runs` is very complex. Examples using Python's [requests](https://requests.readthedocs.io/en/master/) are provided by [GitHub - genpei/tests/post_runs_examples](https://github.com/suecharo/genpei/tree/master/tests/post_runs_examples). Please use this as a reference
+`POST /runs` の実行は非常に複雑です。Python の [requests](https://requests.readthedocs.io/en/master/) を用いた例として、[GitHub - genpei/tests/post_runs_examples](https://github.com/suecharo/genpei/tree/master/tests/post_runs_examples) が用意されています。参考にしてください。
 
 ## Development
 
-The development environment starts with the following.
+開発環境は以下で起動します。
 
 ```bash
 $ docker-compose -f docker-compose.dev.yml up -d --build
 $ docker-compose -f docker-compose.dev.yml exec app bash
 ```
 
-We use [flake8](https://pypi.org/project/flake8/), [isort](https://github.com/timothycrosley/isort), and [mypy](http://mypy-lang.org) as the Linter.
+Lint Tool として、[flake8](https://pypi.org/project/flake8/), [isort](https://github.com/timothycrosley/isort), [mypy](http://mypy-lang.org) を用いています。
+
+それぞれの実行方法は以下のとおりです。
 
 ```bash
 $
@@ -149,7 +151,9 @@ $ bash ./tests/lint_and_style_check/isort.sh
 $ bash ./tests/lint_and_style_check/mypy.sh
 ```
 
-We use [pytest](https://docs.pytest.org/en/latest/) as a Test Tool.
+Test Tool として、[pytest](https://docs.pytest.org/en/latest/) を用いてます。
+
+実行方法は以下のとおりです。
 
 ```bash
 $ pytest .
