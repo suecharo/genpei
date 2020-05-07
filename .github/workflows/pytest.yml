@@ -1,10 +1,6 @@
-name: Lint and Style Check
+name: Run pytest
 
-on:
-  push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -24,16 +20,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Check with flake8
+      - name: Check with pytest
         run: |
-          flake8 . --count --show-source --statistics
-      - name: Check with isort
-        run: |
-          isort -c
-      - name: Check with mypy
-        run: |
-          mypy --strict \
-            --allow-untyped-calls \
-            --ignore-missing-imports \
-            --no-warn-unused-ignores \
-            .
+          pytest .
