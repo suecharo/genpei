@@ -31,7 +31,7 @@ $ docker-compose exec app genpei
 
 ## Usage
 
-API 仕様は、[GitHub - GA4GH WES](https://github.com/ga4gh/workflow-execution-service-schemas) や [SwaggerUI - GA4GH WES](TODO) を確認してください。
+API 仕様は、[GitHub - GA4GH WES](https://github.com/ga4gh/workflow-execution-service-schemas) や [SwaggerUI - GA4GH WES](https://suecharo.github.io/genpei-swagger-ui/dist/) を確認してください。
 
 一番簡単な REST API Request として、`GET /service-info` の例を挙げます。
 
