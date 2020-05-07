@@ -13,6 +13,7 @@ from typing import Dict, List, Optional
 
 from cwltool.main import run as cwltool
 from flask import abort
+from flask.globals import current_app
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
@@ -67,52 +68,64 @@ def prepare_exe_dir(run_id: str,
 
 
 def fork_run(run_id: str, run_request: RunRequest) -> None:
+    run_base_dir: Path = current_app.config["RUN_DIR"]
     ctx: BaseContext = mp.get_context("spawn")
     process: BaseProcess = \
-        ctx.Process(target=forked_process, args=(run_id, run_request))
+        ctx.Process(target=forked_process,
+                    args=(run_id, run_request, run_base_dir))
     process.start()  # Non blocking
 
 
-def forked_process(run_id: str, run_request: RunRequest) -> None:
+def forked_process(run_id: str,
+                   run_request: RunRequest, run_base_dir: Path) -> None:
     try:
-        write_file(run_id, "state", State.INITIALIZING.name)
+        write_file(run_id, "state", State.INITIALIZING.name, run_base_dir)
         wf_engine_params: List[str] = \
             flatten_wf_engine_params(run_request["workflow_engine_parameters"])
         if "--outdir" not in wf_engine_params:
             wf_engine_params.append("--outdir")
-            wf_engine_params.append(str(get_path(run_id, "output")))
+            wf_engine_params.append(
+                str(get_path(run_id, "output", run_base_dir)))
         wf_url: str = run_request["workflow_url"]
-        wf_params_file: Path = get_path(run_id, "wf_params")
+        wf_params_file: Path = get_path(run_id, "wf_params", run_base_dir)
         all_args: List[str] = [*wf_engine_params, wf_url, str(wf_params_file)]
-        write_file(run_id, "cmd", " ".join(["cwltool", *all_args]))
-        os.chdir(get_path(run_id, "exe"))
+        write_file(run_id, "cmd",
+                   " ".join(["cwltool", *all_args]), run_base_dir)
+        os.chdir(get_path(run_id, "exe", run_base_dir))
         ctx: BaseContext = mp.get_context("spawn")
         process: BaseProcess = \
-            ctx.Process(target=run_cwltool, args=(run_id, all_args))
-        write_file(run_id, "state", State.RUNNING.name)
-        write_file(run_id, "start_time", datetime.now().strftime(DATE_FORMAT))
+            ctx.Process(target=run_cwltool,
+                        args=(run_id, all_args, run_base_dir))
+        write_file(run_id, "state", State.RUNNING.name, run_base_dir)
+        write_file(run_id, "start_time", datetime.now().strftime(DATE_FORMAT),
+                   run_base_dir)
         process.start()
         pid: Optional[int] = process.pid
         if pid is not None:
-            write_file(run_id, "pid", str(pid))
+            write_file(run_id, "pid", str(pid), run_base_dir)
         process.join()  # blocking
-        write_file(run_id, "end_time", datetime.now().strftime(DATE_FORMAT))
+        write_file(run_id, "end_time", datetime.now().strftime(DATE_FORMAT),
+                   run_base_dir)
         exit_code: Optional[int] = process.exitcode
         if exit_code is not None:
-            write_file(run_id, "exit_code", str(exit_code))
+            write_file(run_id, "exit_code", str(exit_code), run_base_dir)
         if exit_code == 0:
-            write_file(run_id, "state", State.COMPLETE.name)
+            write_file(run_id, "state", State.COMPLETE.name, run_base_dir)
         else:
-            write_file(run_id, "state", State.EXECUTOR_ERROR.name)
+            write_file(run_id, "state",
+                       State.EXECUTOR_ERROR.name, run_base_dir)
     except Exception:
-        write_file(run_id, "state", State.SYSTEM_ERROR.name)
-        print_exc(file=get_path(run_id, "sys_error").open(mode="w"))
+        write_file(run_id, "state", State.SYSTEM_ERROR.name, run_base_dir)
+        print_exc(file=get_path(run_id, "sys_error",
+                                run_base_dir).open(mode="w"))
 
 
-def run_cwltool(run_id: str, all_args: List[str]) -> None:
+def run_cwltool(run_id: str, all_args: List[str], run_base_dir: Path) -> None:
     cwltool(all_args,
-            stdout=get_path(run_id, "stdout").open(mode="w", buffering=1),
-            stderr=get_path(run_id, "stderr").open(mode="w", buffering=1))
+            stdout=get_path(run_id, "stdout",
+                            run_base_dir).open(mode="w", buffering=1),
+            stderr=get_path(run_id, "stderr",
+                            run_base_dir).open(mode="w", buffering=1))
 
 
 def get_run_log(run_id: str) -> RunLog:
@@ -129,6 +142,13 @@ def get_run_log(run_id: str) -> RunLog:
 
 
 def get_log(run_id: str) -> Log:
+    str_exit_code: str = read_file(run_id, "exit_code")
+    exit_code: int
+    if str_exit_code == "":
+        exit_code = -999
+    else:
+        exit_code = int(str_exit_code)
+
     log: Log = {
         "name": "",
         "cmd": read_cmd(run_id),
@@ -136,7 +156,7 @@ def get_log(run_id: str) -> Log:
         "end_time": read_file(run_id, "end_time"),
         "stdout": read_file(run_id, "stdout"),
         "stderr": read_file(run_id, "stderr"),
-        "exit_code": int(read_file(run_id, "exit_code"))
+        "exit_code": exit_code
     }
 
     return log

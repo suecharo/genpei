@@ -5,3 +5,4 @@ isort
 mypy
 requests
 typing_extensions
+pytest

@@ -81,16 +81,16 @@ def handle_default_run_dir(run_dir: Optional[List[str]]) -> Path:
     return run_dir_path
 
 
-def create_app() -> Flask:
+def create_app(run_dir: Path) -> Flask:
     app = Flask(__name__)
     app.register_blueprint(app_bp)
+    app.config["RUN_DIR"] = run_dir
 
     return app
 
 
-def run(host, port, debug, run_dir) -> None:
-    app: Flask = create_app()
-    app.config["RUN_DIR"] = run_dir
+def run(host: str, port: int, debug: bool, run_dir: Path) -> None:
+    app: Flask = create_app(run_dir)
     app.run(host=host, port=port, debug=debug)
 
 

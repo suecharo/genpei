@@ -6,7 +6,7 @@ import os
 import shlex
 from pathlib import Path
 from traceback import print_exc
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Optional
 from uuid import uuid4
 
 from cwltool.update import ALLUPDATES
@@ -35,14 +35,18 @@ def generate_run_id() -> str:
     return str(uuid4())
 
 
-def get_run_dir(run_id: str) -> Path:
-    run_base_dir: Path = current_app.config["RUN_DIR"]
+def get_run_dir(run_id: str, run_base_dir: Optional[Path] = None) -> Path:
+    if run_base_dir is None:
+        run_base_dir = current_app.config["RUN_DIR"]
 
     return run_base_dir.joinpath(run_id[:2]).joinpath(run_id).resolve()
 
 
-def get_path(run_id: str, file_type: str) -> Path:
-    return get_run_dir(run_id).joinpath(RUN_DIR_STRUCTURE[file_type])
+def get_path(run_id: str, file_type: str,
+             run_base_dir: Optional[Path] = None) -> Path:
+    run_dir: Path = get_run_dir(run_id, run_base_dir)
+
+    return run_dir.joinpath(RUN_DIR_STRUCTURE[file_type])
 
 
 def read_run_request(run_id: str) -> RunRequest:
@@ -52,8 +56,9 @@ def read_run_request(run_id: str) -> RunRequest:
     return run_request
 
 
-def write_file(run_id: str, file_type: str, content: str) -> None:
-    file: Path = get_path(run_id, file_type)
+def write_file(run_id: str, file_type: str, content: str,
+               run_base_dir: Optional[Path] = None) -> None:
+    file: Path = get_path(run_id, file_type, run_base_dir)
     file.parent.mkdir(parents=True, exist_ok=True)
     with file.open(mode="w") as f:
         f.write(content)
@@ -70,7 +75,8 @@ def flatten_wf_engine_params(wf_engine_params: str) -> List[str]:
             try:
                 params.append(str(val))
             except Exception:
-                print_exc()
+                if current_app.debug:
+                    print_exc()
 
     return params
 
@@ -103,7 +109,8 @@ def read_file(run_id: str, file_type: str) -> str:
         with file.open(mode="r") as f:
             return f.read()
     except Exception:
-        print_exc()
+        if current_app.debug:
+            print_exc()
         return ""
 
 
@@ -116,7 +123,8 @@ def read_cmd(run_id: str) -> List[str]:
             l_cmd: List[str] = shlex.split(cmd)
             return l_cmd
     except Exception:
-        print_exc()
+        if current_app.debug:
+            print_exc()
         return []
 
 
@@ -134,7 +142,8 @@ def get_outputs(run_id: str) -> Dict[str, str]:
             outputs[output_file.name] = str(output_file)
         return outputs
     except Exception:
-        print_exc()
+        if current_app.debug:
+            print_exc()
         return {}
 
 
