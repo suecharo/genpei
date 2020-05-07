@@ -1,8 +1,8 @@
 cwltool
 flake8
-flask
+Flask
 isort
 mypy
 pytest
 requests
-typing_extensions
+typing-extensions
