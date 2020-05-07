@@ -5,7 +5,7 @@ import json
 import os
 import shlex
 from pathlib import Path
-from traceback import print_exc
+from traceback import format_exc
 from typing import Dict, Iterable, List, Optional
 from uuid import uuid4
 
@@ -75,8 +75,7 @@ def flatten_wf_engine_params(wf_engine_params: str) -> List[str]:
             try:
                 params.append(str(val))
             except Exception:
-                if current_app.debug:
-                    print_exc()
+                current_app.logger.debug(format_exc())
 
     return params
 
@@ -109,8 +108,7 @@ def read_file(run_id: str, file_type: str) -> str:
         with file.open(mode="r") as f:
             return f.read()
     except Exception:
-        if current_app.debug:
-            print_exc()
+        current_app.logger.debug(format_exc())
         return ""
 
 
@@ -123,8 +121,7 @@ def read_cmd(run_id: str) -> List[str]:
             l_cmd: List[str] = shlex.split(cmd)
             return l_cmd
     except Exception:
-        if current_app.debug:
-            print_exc()
+        current_app.logger.debug(format_exc())
         return []
 
 
@@ -142,8 +139,7 @@ def get_outputs(run_id: str) -> Dict[str, str]:
             outputs[output_file.name] = str(output_file)
         return outputs
     except Exception:
-        if current_app.debug:
-            print_exc()
+        current_app.logger.debug(format_exc())
         return {}
 
 

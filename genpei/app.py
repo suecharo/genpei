@@ -4,12 +4,15 @@ import argparse
 import os
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from traceback import format_exc
 from typing import List, Optional
 
-from flask import Flask
+from flask import Flask, Response, current_app, jsonify
+from werkzeug.exceptions import HTTPException
 
 from genpei.const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_RUN_DIR
 from genpei.controller import app_bp
+from genpei.type import ErrorResponse
 
 
 def parse_args() -> Namespace:
@@ -81,9 +84,41 @@ def handle_default_run_dir(run_dir: Optional[List[str]]) -> Path:
     return run_dir_path
 
 
+def fix_errorhandler(app: Flask) -> Flask:
+    @app.errorhandler(400)
+    @app.errorhandler(401)
+    @app.errorhandler(403)
+    @app.errorhandler(404)
+    @app.errorhandler(500)
+    def error_handler(error: HTTPException) -> Response:
+        res_body: ErrorResponse = {
+            "msg": error.description,  # type: ignore
+            "status_code": error.code,  # type: ignore
+        }
+        response: Response = jsonify(res_body)
+        response.status_code = error.code  # type: ignore
+        return response
+
+    @app.errorhandler(Exception)
+    def error_handler_exception(exception: Exception) -> Response:
+        current_app.logger.error(exception.args[0])
+        current_app.logger.debug(format_exc())
+        res_body: ErrorResponse = {
+            "msg": "The server encountered an internal error and was " +
+                   "unable to complete your request.",
+            "status_code": 500,
+        }
+        response: Response = jsonify(res_body)
+        response.status_code = 500
+        return response
+
+    return app
+
+
 def create_app(run_dir: Path) -> Flask:
     app = Flask(__name__)
     app.register_blueprint(app_bp)
+    fix_errorhandler(app)
     app.config["RUN_DIR"] = run_dir
 
     return app
