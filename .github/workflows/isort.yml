@@ -1,4 +1,4 @@
-name: Run isort
+name: isort
 
 on: [push, pull_request]
 
