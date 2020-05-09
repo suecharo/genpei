@@ -11,6 +11,7 @@ services:
       - GENPEI_HOST=0.0.0.0
       - GENPEI_PORT=8080
       - GENPEI_DEBUG=False
+      - GENPEI_RUN_DIR=${PWD}/run
     ports:
       - 8080:8080
     restart: always

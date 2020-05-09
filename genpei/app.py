@@ -24,14 +24,14 @@ def parse_args() -> Namespace:
         "--host",
         nargs=1,
         type=str,
-        help="Host address of Flask. (default: 127.0.0.1)"
+        help=f"Host address of Flask. (default: {DEFAULT_HOST})"
     )
     parser.add_argument(
         "-p",
         "--port",
         nargs=1,
         type=int,
-        help="Port of Flask. (default: 8080)"
+        help=f"Port of Flask. (default: {DEFAULT_PORT})"
     )
     parser.add_argument(
         "--debug",
