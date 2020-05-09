@@ -7,11 +7,8 @@ services:
     image: genpei
     container_name: genpei
     volumes:
-      - /usr/bin/docker:/usr/bin/docker # for Ubuntu
-      # - /usr/local/bin/docker:/usr/local/bin/docker # for MacOS
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp # for cwltool
-      # Mounting PWD in the container for cwltool
+      - /tmp:/tmp
       - ${PWD}:${PWD}
     environment:
       - GENPEI_HOST=0.0.0.0

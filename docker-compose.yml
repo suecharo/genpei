@@ -4,11 +4,8 @@ services:
     image: docker.pkg.github.com/suecharo/genpei/genpei:1.0.1
     container_name: genpei
     volumes:
-      - /usr/bin/docker:/usr/bin/docker # for Ubuntu
-      # - /usr/local/bin/docker:/usr/local/bin/docker # for MacOS
       - /var/run/docker.sock:/var/run/docker.sock
-      - /tmp:/tmp # for cwltool
-      # Mounting PWD in the container for cwltool
+      - /tmp:/tmp
       - ${PWD}:${PWD}
     environment:
       - GENPEI_HOST=0.0.0.0
@@ -18,4 +15,4 @@ services:
       - 8080:8080
     restart: always
     working_dir: ${PWD}
-    command: ["tail", "-f", "/dev/null"]
+    command: ["genpei"]
