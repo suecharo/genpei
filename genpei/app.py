@@ -24,6 +24,7 @@ def parse_args() -> Namespace:
         "--host",
         nargs=1,
         type=str,
+        metavar="",
         help=f"Host address of Flask. (default: {DEFAULT_HOST})"
     )
     parser.add_argument(
@@ -31,11 +32,13 @@ def parse_args() -> Namespace:
         "--port",
         nargs=1,
         type=int,
+        metavar="",
         help=f"Port of Flask. (default: {DEFAULT_PORT})"
     )
     parser.add_argument(
         "--debug",
         action="store_true",
+        metavar="",
         help="Enable debug mode of Flask."
     )
     parser.add_argument(
@@ -43,6 +46,7 @@ def parse_args() -> Namespace:
         "--run-dir",
         nargs=1,
         type=str,
+        metavar="",
         help="Specify the run dir. (default: ./run)"
     )
 
