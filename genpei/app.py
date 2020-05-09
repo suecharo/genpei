@@ -17,8 +17,8 @@ from genpei.type import ErrorResponse
 
 def parse_args() -> Namespace:
     parser: ArgumentParser = argparse.ArgumentParser(
-        description="Implementation of GA4GH WES OpenAPI specification " +
-                    "using cwltool.")
+        description="An implementation of GA4GH Workflow Execution " +
+                    "Service Standard as a microservice")
 
     parser.add_argument(
         "--host",
