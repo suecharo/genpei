@@ -38,7 +38,6 @@ def parse_args() -> Namespace:
     parser.add_argument(
         "--debug",
         action="store_true",
-        metavar="",
         help="Enable debug mode of Flask."
     )
     parser.add_argument(

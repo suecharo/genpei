@@ -3,7 +3,6 @@
 from pathlib import Path
 from typing import Dict
 
-
 SRC_DIR: Path = Path(__file__).parent.resolve()
 
 SERVICE_INFO_JSON: Path = \
