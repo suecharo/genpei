@@ -145,7 +145,6 @@ Lint Tool として、[flake8](https://pypi.org/project/flake8/), [isort](https:
 それぞれの実行方法は以下のとおりです。
 
 ```bash
-$
 $ bash ./tests/lint_and_style_check/flake8.sh
 $ bash ./tests/lint_and_style_check/isort.sh
 $ bash ./tests/lint_and_style_check/mypy.sh

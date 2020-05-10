@@ -13,7 +13,7 @@ It supports the execution and management of Workflow written in [Common Workflow
 
 ## Install and Run
 
-Python 3.6 or higher.
+Genpei supports Python 3.5 or newer.
 
 ```bash
 $ pip3 install genpei
@@ -145,7 +145,6 @@ $ docker-compose -f docker-compose.dev.yml exec app bash
 We use [flake8](https://pypi.org/project/flake8/), [isort](https://github.com/timothycrosley/isort), and [mypy](http://mypy-lang.org) as the Linter.
 
 ```bash
-$
 $ bash ./tests/lint_and_style_check/flake8.sh
 $ bash ./tests/lint_and_style_check/isort.sh
 $ bash ./tests/lint_and_style_check/mypy.sh
@@ -157,7 +156,7 @@ We use [pytest](https://docs.pytest.org/en/latest/) as a Test Tool.
 $ pytest .
 ```
 
-## Lisense
+## License
 
 [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0). See the [LICENSE](https://github.com/suecharo/genpei/blob/master/LICENSE).
 
