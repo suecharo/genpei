@@ -16,7 +16,7 @@ services:
       - GENPEI_DEBUG=True
       - GENPEI_RUN_DIR=${PWD}/run
     ports:
-      - 8888:8080
+      - 8080:8080
     restart: always
     working_dir: ${PWD}
     command: ["/bin/bash", "./entrypoint.dev.sh"]
