@@ -59,7 +59,7 @@ def validate_wf_type(wf_type: str, wf_type_version: str) -> None:
 def prepare_exe_dir(run_id: str,
                     request_files: Dict[str, FileStorage]) \
         -> None:
-    exe_dir: Path = get_path(run_id, "exe")
+    exe_dir: Path = get_path(run_id, "exe_dir")
     exe_dir.mkdir(parents=True, exist_ok=True)
     for file in request_files.values():
         if file.filename != "":
@@ -85,13 +85,13 @@ def forked_process(run_id: str,
         if "--outdir" not in wf_engine_params:
             wf_engine_params.append("--outdir")
             wf_engine_params.append(
-                str(get_path(run_id, "output", run_base_dir)))
+                str(get_path(run_id, "outputs_dir", run_base_dir)))
         wf_url: str = run_request["workflow_url"]
         wf_params_file: Path = get_path(run_id, "wf_params", run_base_dir)
         all_args: List[str] = [*wf_engine_params, wf_url, str(wf_params_file)]
         write_file(run_id, "cmd",
                    " ".join(["cwltool", *all_args]), run_base_dir)
-        os.chdir(get_path(run_id, "exe", run_base_dir))
+        os.chdir(get_path(run_id, "exe_dir", run_base_dir))
         ctx: BaseContext = mp.get_context("spawn")
         process: BaseProcess = \
             ctx.Process(target=run_cwltool,

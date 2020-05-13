@@ -13,7 +13,7 @@ from cwltool.update import ALLUPDATES
 from cwltool.utils import versionstring
 from flask import current_app
 
-from genpei.const import RUN_DIR_STRUCTURE, SERVICE_INFO_JSON
+from genpei.const import RUN_DIR_STRUCTURE
 from genpei.type import RunRequest, ServiceInfo, State
 
 CWLTOOL_VERSION: str = versionstring().split(" ")[1]
@@ -21,12 +21,12 @@ CWL_VERSIONS: List[str] = list(map(str, ALLUPDATES.keys()))
 
 
 def read_service_info() -> ServiceInfo:
-    with SERVICE_INFO_JSON.open(mode="r") as f:
+    with current_app.config["SERVICE_INFO"].open(mode="r") as f:
         service_info: ServiceInfo = json.load(f)
     service_info["workflow_engine_versions"]["cwltool"] = CWLTOOL_VERSION
     service_info["workflow_type_versions"]["CWL"]["workflow_type_version"] = \
         CWL_VERSIONS
-    service_info["system_state_counts"] = count_state()  # type: ignore
+    service_info["system_state_counts"] = count_system_state()  # type: ignore
 
     return service_info
 
@@ -92,12 +92,10 @@ def get_all_run_ids() -> List[str]:
 
 def get_state(run_id: str) -> State:
     try:
-        state_file: Path = get_path(run_id, "state")
-        with state_file.open(mode="r") as f:
+        with get_path(run_id, "state").open(mode="r") as f:
             str_state: str = \
                 [line for line in f.read().splitlines() if line != ""][0]
-        state: State = State[str_state]
-        return state
+        return State[str_state]
     except Exception:
         return State.UNKNOWN
 
@@ -132,7 +130,7 @@ def get_outputs(run_id: str) -> Dict[str, str]:
         outdir_path: Path = Path(cmd[outdir_ind])
         if not outdir_path.is_absolute():
             outdir_path = \
-                get_path(run_id, "exe").joinpath(outdir_path).resolve()
+                get_path(run_id, "exe_dir").joinpath(outdir_path).resolve()
         output_files: List[Path] = sorted(list(walk_all_files(outdir_path)))
         outputs: Dict[str, str] = {}
         for output_file in output_files:
@@ -150,7 +148,7 @@ def walk_all_files(dir: Path) -> Iterable[Path]:
             yield Path(root).joinpath(file)
 
 
-def count_state() -> Dict[str, int]:
+def count_system_state() -> Dict[str, int]:
     run_ids: List[str] = get_all_run_ids()
     count: Dict[str, int] = \
         dict(collections.Counter(

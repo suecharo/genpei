@@ -76,17 +76,18 @@ Startup Option (`--host` and `--port`) of Genpei allows you to change the startu
 
 ```bash
 $ genpei --help
-usage: genpei [-h] [--host HOST] [-p PORT] [--debug] [-r RUN_DIR]
+usage: genpei [-h] [--host] [-p] [--debug] [-r] [--service-info]
 
-Implementation of GA4GH WES OpenAPI specification using cwltool.
+An implementation of GA4GH Workflow Execution Service Standard as a microservice
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --host HOST           Host address of Flask. (default: 127.0.0.1)
-  -p PORT, --port PORT  Port of Flask. (default: 8080)
-  --debug               Enable debug mode of Flask.
-  -r RUN_DIR, --run-dir RUN_DIR
-                        Specify the run dir. (default: ./run)
+  -h, --help       show this help message and exit
+  --host           Host address of Flask. (default: 127.0.0.1)
+  -p , --port      Port of Flask. (default: 8080)
+  --debug          Enable debug mode of Flask.
+  -r , --run-dir   Specify the run dir. (default: ./run)
+  --service-info   Specify `service-info.json`. The workflow_engine_versions, workflow_type_versions
+                   and system_state_counts are overwritten in the application.
 
 $ genpei --host 0.0.0.0 --port 5000
 ```
@@ -110,7 +111,7 @@ $ tree run
 │       │   ├── trimmomatic_pe.cwl
 │       │   └── workflow_params.json
 │       ├── exit_code.txt
-│       ├── output
+│       ├── outputs
 │       │   ├── ERR034597_1.small_fastqc.html
 │       │   ├── ERR034597_1.small_fastqc.html_2
 │       │   ├── ERR034597_1.small.fq.trimmed.1P.fq

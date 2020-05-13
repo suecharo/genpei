@@ -2,20 +2,22 @@
 # coding: utf-8
 import argparse
 import os
+import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from traceback import format_exc
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 from flask import Flask, Response, current_app, jsonify
 from werkzeug.exceptions import HTTPException
 
-from genpei.const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_RUN_DIR
+from genpei.const import (DEFAULT_HOST, DEFAULT_PORT, DEFAULT_RUN_DIR,
+                          DEFAULT_SERVICE_INFO)
 from genpei.controller import app_bp
 from genpei.type import ErrorResponse
 
 
-def parse_args() -> Namespace:
+def parse_args(sys_args: List[str]) -> Namespace:
     parser: ArgumentParser = argparse.ArgumentParser(
         description="An implementation of GA4GH Workflow Execution " +
                     "Service Standard as a microservice")
@@ -47,11 +49,35 @@ def parse_args() -> Namespace:
         type=str,
         metavar="",
         help="Specify the run dir. (default: ./run)"
+    ),
+    parser.add_argument(
+        "--service-info",
+        nargs=1,
+        metavar="",
+        help="Specify `service-info.json`. The workflow_engine_versions, " +
+        "workflow_type_versions and system_state_counts are overwritten in " +
+        "the application."
     )
 
-    args: Namespace = parser.parse_args()
+    args: Namespace = parser.parse_args(sys_args)
 
     return args
+
+
+def handle_default_params(args: Namespace) -> Dict[str, Union[str, int, Path]]:
+    params: Dict[str, Union[str, int, Path]] = {
+        "host": handle_default_host(args.host),
+        "port": handle_default_port(args.port),
+        "debug": handle_default_debug(args.debug),
+        "run_dir": handle_default_path(args.run_dir,
+                                       "GENPEI_RUN_DIR",
+                                       DEFAULT_RUN_DIR),
+        "service_info": handle_default_path(args.service_info,
+                                            "GENPEI_SERVICE_INFO",
+                                            DEFAULT_SERVICE_INFO),
+    }
+
+    return params
 
 
 def handle_default_host(host: Optional[List[str]]) -> str:
@@ -70,21 +96,28 @@ def handle_default_port(port: Optional[List[str]]) -> int:
 
 def handle_default_debug(debug: bool) -> bool:
     if debug is False:
-        return bool(os.environ.get("GENPEI_DEBUG", False))
+        return str2bool(os.environ.get("GENPEI_DEBUG", False))
 
     return debug
 
 
-def handle_default_run_dir(run_dir: Optional[List[str]]) -> Path:
-    run_dir_path: Path
-    if run_dir is None:
-        run_dir_path = Path(os.environ.get("GENPEI_RUN_DIR", DEFAULT_RUN_DIR))
+def handle_default_path(input_arg: Optional[List[str]], env_var: str,
+                        default_val: Path) -> Path:
+    handled_path: Path
+    if input_arg is None:
+        handled_path = Path(os.environ.get(env_var, default_val))
     else:
-        run_dir_path = Path(run_dir[0])
-    if not run_dir_path.is_absolute():
-        run_dir_path = Path.cwd().joinpath(run_dir_path).resolve()
+        handled_path = Path(input_arg[0])
+    if not handled_path.is_absolute():
+        handled_path = Path.cwd().joinpath(handled_path).resolve()
 
-    return run_dir_path
+    return handled_path
+
+
+def str2bool(val: Union[str, bool]) -> bool:
+    if isinstance(val, bool):
+        return val
+    return False if val.lower() in ["false", "no", "n"] else bool(val)
 
 
 def fix_errorhandler(app: Flask) -> Flask:
@@ -111,6 +144,8 @@ def fix_errorhandler(app: Flask) -> Flask:
                    "unable to complete your request.",
             "status_code": 500,
         }
+        if current_app.config["TESTING"]:
+            res_body["msg"] = format_exc()
         response: Response = jsonify(res_body)
         response.status_code = 500
         return response
@@ -118,28 +153,23 @@ def fix_errorhandler(app: Flask) -> Flask:
     return app
 
 
-def create_app(run_dir: Path) -> Flask:
+def create_app(params: Dict[str, Union[str, int, Path]]) -> Flask:
     app = Flask(__name__)
     app.register_blueprint(app_bp)
     fix_errorhandler(app)
-    app.config["RUN_DIR"] = run_dir
+    app.config["RUN_DIR"] = params["run_dir"]
+    app.config["SERVICE_INFO"] = params["service_info"]
 
     return app
 
 
-def run(host: str, port: int, debug: bool, run_dir: Path) -> None:
-    app: Flask = create_app(run_dir)
-    app.run(host=host, port=port, debug=debug)
-
-
 def main() -> None:
-    args: Namespace = parse_args()
-    host: str = handle_default_host(args.host)
-    port: int = handle_default_port(args.port)
-    debug: bool = handle_default_debug(args.debug)
-    run_dir: Path = handle_default_run_dir(args.run_dir)
-
-    run(host, port, debug, run_dir)
+    args: Namespace = parse_args(sys.argv[1:])
+    params: Dict[str, Union[str, int, Path]] = handle_default_params(args)
+    app: Flask = create_app(params)
+    app.run(host=params["host"],  # type: ignore
+            port=params["port"],  # type: ignore
+            debug=params["debug"])  # type: ignore
 
 
 if __name__ == "__main__":

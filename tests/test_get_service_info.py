@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 # coding: utf-8
+from argparse import Namespace
 from pathlib import Path
+from typing import Dict, Union
 
 from flask import Flask
 from flask.testing import FlaskClient
 from flask.wrappers import Response
-from py._path.local import LocalPath
 
-from genpei.app import create_app
+from genpei.app import create_app, handle_default_params, parse_args
 from genpei.type import ServiceInfo
 
 
-def test_get_service_info(tmpdir: LocalPath) -> None:
-    app: Flask = create_app(Path(tmpdir))
+def test_get_service_info(delete_env_vars: None) -> None:
+    args: Namespace = parse_args([])
+    params: Dict[str, Union[str, int, Path]] = handle_default_params(args)
+    app: Flask = create_app(params)
+    app.debug = params["debug"]  # type: ignore
     app.testing = True
     client: FlaskClient[Response] = app.test_client()
     res: Response = client.get("/service-info")

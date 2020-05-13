@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import json
+from argparse import Namespace
 from pathlib import Path
 from time import sleep
+from typing import Dict, Union
 
 from flask import Flask
 from flask.testing import FlaskClient
 from flask.wrappers import Response
 from py._path.local import LocalPath
 
-from genpei.app import create_app
+from genpei.app import create_app, handle_default_params, parse_args
 from genpei.type import RunId, RunLog, RunRequest
 
 
@@ -45,8 +47,11 @@ def access_remote_files(client: FlaskClient) -> Response:  # type: ignore
     return response
 
 
-def test_access_remote_files(tmpdir: LocalPath) -> None:
-    app: Flask = create_app(Path(tmpdir))
+def test_access_remote_files(delete_env_vars: None, tmpdir: LocalPath) -> None:
+    args: Namespace = parse_args(["--run-dir", str(tmpdir)])
+    params: Dict[str, Union[str, int, Path]] = handle_default_params(args)
+    app: Flask = create_app(params)
+    app.debug = params["debug"]  # type: ignore
     app.testing = True
     client: FlaskClient[Response] = app.test_client()
     posts_res: Response = access_remote_files(client)

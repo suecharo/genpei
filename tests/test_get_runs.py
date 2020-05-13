@@ -1,25 +1,30 @@
 #!/usr/bin/env python3
 # coding: utf-8
+from argparse import Namespace
 from pathlib import Path
 from time import sleep
+from typing import Dict, Union
 
 from flask import Flask
 from flask.testing import FlaskClient
 from flask.wrappers import Response
 from py._path.local import LocalPath
 
-from genpei.app import create_app
+from genpei.app import create_app, handle_default_params, parse_args
 from genpei.type import RunId, RunListResponse
 
 
 def get_runs(client: FlaskClient) -> Response:  # type: ignore
-    response: Response = client.get(f"/runs")
+    response: Response = client.get("/runs")
 
     return response
 
 
-def test_get_runs(tmpdir: LocalPath) -> None:
-    app: Flask = create_app(Path(tmpdir))
+def test_get_runs(delete_env_vars: None, tmpdir: LocalPath) -> None:
+    args: Namespace = parse_args(["--run-dir", str(tmpdir)])
+    params: Dict[str, Union[str, int, Path]] = handle_default_params(args)
+    app: Flask = create_app(params)
+    app.debug = params["debug"]  # type: ignore
     app.testing = True
     client: FlaskClient[Response] = app.test_client()
     from .post_runs_tests.test_access_remote_files import access_remote_files
