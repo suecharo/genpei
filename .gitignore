@@ -224,6 +224,4 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-.gitkeep
 run/
-tests/resources/outputs/

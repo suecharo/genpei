@@ -2,6 +2,7 @@ cwltool
 flake8
 Flask
 isort
+jsonschema
 mypy
 pytest
 requests
