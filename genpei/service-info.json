@@ -10,7 +10,6 @@
     "cwltool": ""
   },
   "default_workflow_engine_parameters": [],
-  "system_state_counts": {},
   "auth_instructions_url": "https://github.com/suecharo/genpei",
   "contact_info_url": "https://github.com/suecharo/genpei",
   "tags": {

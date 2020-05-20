@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import argparse
+import json
 import os
 import sys
 from argparse import ArgumentParser, Namespace
@@ -9,10 +10,11 @@ from traceback import format_exc
 from typing import Dict, List, Optional, Union
 
 from flask import Flask, Response, current_app, jsonify
+from jsonschema import validate
 from werkzeug.exceptions import HTTPException
 
 from genpei.const import (DEFAULT_HOST, DEFAULT_PORT, DEFAULT_RUN_DIR,
-                          DEFAULT_SERVICE_INFO)
+                          DEFAULT_SERVICE_INFO, SERVICE_INFO_SCHEMA)
 from genpei.controller import app_bp
 from genpei.type import ErrorResponse
 
@@ -120,6 +122,12 @@ def str2bool(val: Union[str, bool]) -> bool:
     return False if val.lower() in ["false", "no", "n"] else bool(val)
 
 
+def validate_service_info(service_info: Path) -> None:
+    with service_info.open(mode="r") as f_d, \
+            SERVICE_INFO_SCHEMA.open(mode="r") as f_s:
+        validate(json.load(f_d), json.load(f_s))
+
+
 def fix_errorhandler(app: Flask) -> Flask:
     @app.errorhandler(400)
     @app.errorhandler(401)
@@ -159,6 +167,7 @@ def create_app(params: Dict[str, Union[str, int, Path]]) -> Flask:
     fix_errorhandler(app)
     app.config["RUN_DIR"] = params["run_dir"]
     app.config["SERVICE_INFO"] = params["service_info"]
+    validate_service_info(app.config["SERVICE_INFO"])
 
     return app
 

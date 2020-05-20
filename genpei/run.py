@@ -20,8 +20,8 @@ from werkzeug.utils import secure_filename
 from genpei.const import CANCEL_TIMEOUT, DATE_FORMAT
 from genpei.type import Log, RunLog, RunRequest, ServiceInfo, State
 from genpei.util import (flatten_wf_engine_params, get_all_run_ids,
-                         get_outputs, get_path, get_state, read_cmd, read_file,
-                         read_run_request, read_service_info, write_file)
+                         get_outputs, get_path, get_state, read_file,
+                         read_service_info, write_file)
 
 
 def validate_run_request(run_request: RunRequest) -> None:
@@ -57,14 +57,15 @@ def validate_wf_type(wf_type: str, wf_type_version: str) -> None:
 
 
 def prepare_exe_dir(run_id: str,
-                    request_files: Dict[str, FileStorage]) \
-        -> None:
+                    request_files: Dict[str, FileStorage]) -> None:
     exe_dir: Path = get_path(run_id, "exe_dir")
     exe_dir.mkdir(parents=True, exist_ok=True)
     for file in request_files.values():
         if file.filename != "":
-            filename: str = secure_filename(file.filename)
-            file.save(exe_dir.joinpath(filename))  # type: ignore
+            file_name: str = secure_filename(file.filename)
+            file_path: Path = exe_dir.joinpath(file_name).resolve()
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file.save(file_path)  # type: ignore
 
 
 def fork_run(run_id: str, run_request: RunRequest) -> None:
@@ -72,16 +73,18 @@ def fork_run(run_id: str, run_request: RunRequest) -> None:
     ctx: BaseContext = mp.get_context("spawn")
     process: BaseProcess = \
         ctx.Process(target=forked_process,
-                    args=(run_id, run_request, run_base_dir))
+                    args=(run_id, run_request, run_base_dir,
+                          current_app.config["SERVICE_INFO"]))
     process.start()  # Non blocking
 
 
-def forked_process(run_id: str,
-                   run_request: RunRequest, run_base_dir: Path) -> None:
+def forked_process(run_id: str, run_request: RunRequest,
+                   run_base_dir: Path, service_info_path: Path) -> None:
     try:
         write_file(run_id, "state", State.INITIALIZING.name, run_base_dir)
         wf_engine_params: List[str] = \
-            flatten_wf_engine_params(run_request["workflow_engine_parameters"])
+            flatten_wf_engine_params(run_request["workflow_engine_parameters"],
+                                     service_info_path)
         if "--outdir" not in wf_engine_params:
             wf_engine_params.append("--outdir")
             wf_engine_params.append(
@@ -131,7 +134,7 @@ def run_cwltool(run_id: str, all_args: List[str], run_base_dir: Path) -> None:
 def get_run_log(run_id: str) -> RunLog:
     run_log: RunLog = {
         "run_id": run_id,
-        "request": read_run_request(run_id),
+        "request": read_file(run_id, "run_request"),
         "state": get_state(run_id).name,  # type: ignore
         "run_log": get_log(run_id),
         "task_logs": [],
@@ -151,7 +154,7 @@ def get_log(run_id: str) -> Log:
 
     log: Log = {
         "name": "",
-        "cmd": read_cmd(run_id),
+        "cmd": read_file(run_id, "cmd"),
         "start_time": read_file(run_id, "start_time"),
         "end_time": read_file(run_id, "end_time"),
         "stdout": read_file(run_id, "stdout"),
@@ -181,7 +184,7 @@ def cancel_run(run_id: str) -> None:
             while count < CANCEL_TIMEOUT:
                 time.sleep(1)
                 count += 1
-                if get_state(run_id) != State.RUNNING:
+                if get_state(run_id) != State.CANCELING:
                     write_file(run_id, "state", State.CANCELED.name)
                     break
         except Exception:

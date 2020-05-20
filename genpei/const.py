@@ -7,13 +7,16 @@ SRC_DIR: Path = Path(__file__).parent.resolve()
 
 DEFAULT_SERVICE_INFO: Path = \
     SRC_DIR.joinpath("service-info.json").resolve()
-DEFAULT_RUN_DIR = Path.cwd().parent.joinpath("run").resolve()
+DEFAULT_RUN_DIR = Path.cwd().joinpath("run").resolve()
 DEFAULT_HOST: str = "127.0.0.1"
 DEFAULT_PORT: int = 8080
 GET_STATUS_CODE: int = 200
 POST_STATUS_CODE: int = 200
 DATE_FORMAT: str = "%Y-%m-%dT%H:%M:%S"
 CANCEL_TIMEOUT: int = 10
+
+SERVICE_INFO_SCHEMA: Path = \
+    SRC_DIR.joinpath("service-info.schema.json").resolve()
 
 RUN_DIR_STRUCTURE: Dict[str, str] = {
     "run_request": "run_request.json",

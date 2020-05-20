@@ -6,7 +6,7 @@ import os
 import shlex
 from pathlib import Path
 from traceback import format_exc
-from typing import Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 from uuid import uuid4
 
 from cwltool.update import ALLUPDATES
@@ -14,14 +14,16 @@ from cwltool.utils import versionstring
 from flask import current_app
 
 from genpei.const import RUN_DIR_STRUCTURE
-from genpei.type import RunRequest, ServiceInfo, State
+from genpei.type import DefaultWorkflowEngineParameter, ServiceInfo, State
 
 CWLTOOL_VERSION: str = versionstring().split(" ")[1]
 CWL_VERSIONS: List[str] = list(map(str, ALLUPDATES.keys()))
 
 
-def read_service_info() -> ServiceInfo:
-    with current_app.config["SERVICE_INFO"].open(mode="r") as f:
+def read_service_info(service_info_path: Optional[Path] = None) -> ServiceInfo:
+    if service_info_path is None:
+        service_info_path = current_app.config["SERVICE_INFO"]
+    with service_info_path.open(mode="r") as f:
         service_info: ServiceInfo = json.load(f)
     service_info["workflow_engine_versions"]["cwltool"] = CWLTOOL_VERSION
     service_info["workflow_type_versions"]["CWL"]["workflow_type_version"] = \
@@ -49,13 +51,6 @@ def get_path(run_id: str, file_type: str,
     return run_dir.joinpath(RUN_DIR_STRUCTURE[file_type])
 
 
-def read_run_request(run_id: str) -> RunRequest:
-    with get_path(run_id, "run_request").open(mode="r") as f:
-        run_request: RunRequest = json.load(f)
-
-    return run_request
-
-
 def write_file(run_id: str, file_type: str, content: str,
                run_base_dir: Optional[Path] = None) -> None:
     file: Path = get_path(run_id, file_type, run_base_dir)
@@ -64,9 +59,11 @@ def write_file(run_id: str, file_type: str, content: str,
         f.write(content)
 
 
-def flatten_wf_engine_params(wf_engine_params: str) -> List[str]:
+def flatten_wf_engine_params(wf_engine_params: str,
+                             service_info_path: Optional[Path] = None) \
+        -> List[str]:
     wf_engine_params_obj = json.loads(wf_engine_params)
-    params: List[str] = []
+    params: List[str] = read_default_wf_engine_params(service_info_path)
     for key, val in wf_engine_params_obj.items():
         params.append(key)
         if isinstance(val, list):
@@ -100,50 +97,44 @@ def get_state(run_id: str) -> State:
         return State.UNKNOWN
 
 
-def read_file(run_id: str, file_type: str) -> str:
-    try:
-        file: Path = get_path(run_id, file_type)
-        with file.open(mode="r") as f:
+def read_file(run_id: str, file_type: str) -> Any:
+    file: Path = get_path(run_id, file_type)
+    if file.exists() is False:
+        if file_type in ["cmd", "start_time", "end_time", "stdout", "stderr",
+                         "exit_code"]:
+            return ""
+        elif file_type == "task_logs":
+            return []
+        elif file_type in ["run_request", "outputs"]:
+            return {}
+        else:
+            return ""
+    with file.open(mode="r") as f:
+        if file_type in ["cmd", "start_time", "end_time", "exit_code"]:
+            return f.read().splitlines()[0]
+        elif file_type in ["stdout", "stderr"]:
             return f.read()
-    except Exception:
-        current_app.logger.debug(format_exc())
-        return ""
-
-
-def read_cmd(run_id: str) -> List[str]:
-    try:
-        cmd_file: Path = get_path(run_id, "cmd")
-        with cmd_file.open(mode="r") as f:
-            cmd: str = \
-                [line for line in f.read().splitlines() if line != ""][0]
-            l_cmd: List[str] = shlex.split(cmd)
-            return l_cmd
-    except Exception:
-        current_app.logger.debug(format_exc())
-        return []
+        elif file_type in ["run_request", "outputs", "task_logs"]:
+            return json.load(f)
+        else:
+            return f.read()
 
 
 def get_outputs(run_id: str) -> Dict[str, str]:
-    try:
-        cmd: List[str] = read_cmd(run_id)
-        outdir_ind: int = cmd.index("--outdir") + 1
-        outdir_path: Path = Path(cmd[outdir_ind])
-        if not outdir_path.is_absolute():
-            outdir_path = \
-                get_path(run_id, "exe_dir").joinpath(outdir_path).resolve()
-        output_files: List[Path] = sorted(list(walk_all_files(outdir_path)))
-        outputs: Dict[str, str] = {}
-        for output_file in output_files:
-            outputs[output_file.name] = str(output_file)
-        return outputs
-    except Exception:
-        current_app.logger.debug(format_exc())
-        return {}
+    cmd: List[str] = shlex.split(read_file(run_id, "cmd"))
+    outdir_ind: int = cmd.index("--outdir") + 1
+    outdir_path: Path = Path(cmd[outdir_ind]).resolve()
+    output_files: List[Path] = sorted(list(walk_all_files(outdir_path)))
+    outputs: Dict[str, str] = {}
+    for output_file in output_files:
+        outputs[str(output_file.relative_to(outdir_path))] = \
+            str(output_file)
+
+    return outputs
 
 
 def walk_all_files(dir: Path) -> Iterable[Path]:
     for root, dirs, files in os.walk(dir):
-        yield Path(root)
         for file in files:
             yield Path(root).joinpath(file)
 
@@ -155,3 +146,16 @@ def count_system_state() -> Dict[str, int]:
             [get_state(run_id).name for run_id in run_ids]))
 
     return count
+
+
+def read_default_wf_engine_params(service_info_path: Optional[Path] = None) \
+        -> List[str]:
+    default_wf_engine_params: List[DefaultWorkflowEngineParameter] = \
+        read_service_info(service_info_path)[
+            "default_workflow_engine_parameters"]
+    params: List[str] = []
+    for param in default_wf_engine_params:
+        params.append(str(param.get("name", "")))
+        params.append(str(param.get("default_value", "")))
+
+    return params
