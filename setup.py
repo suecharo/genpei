@@ -20,7 +20,7 @@ def read_requirements_txt() -> List[str]:
 
 def main() -> None:
     setup(name="genpei",
-          version="1.0.1",
+          version="1.0.2",
           description="An implementation of GA4GH Workflow Execution " +
                       "Service Standard as a microservice",
           long_description=LONG_DESCRIPTION.open(mode="r").read(),
