@@ -21,7 +21,7 @@ def test_default_params(delete_env_vars: None) -> None:
     assert params["host"] == DEFAULT_HOST
     assert params["port"] == DEFAULT_PORT
     assert params["debug"] is False
-    assert app.config["RUN_DIR"] == base_dir.joinpath("tests/run")
+    assert app.config["RUN_DIR"] == base_dir.joinpath("run")
     assert app.config["SERVICE_INFO"] == \
         base_dir.joinpath("genpei/service-info.json")
 
