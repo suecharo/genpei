@@ -1,1 +1,2 @@
 include genpei/service-info.json
+include genpei/service-info.schema.json
