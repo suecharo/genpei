@@ -100,15 +100,7 @@ def get_state(run_id: str) -> State:
 def read_file(run_id: str, file_type: str) -> Any:
     file: Path = get_path(run_id, file_type)
     if file.exists() is False:
-        if file_type in ["cmd", "start_time", "end_time", "stdout", "stderr",
-                         "exit_code"]:
-            return ""
-        elif file_type == "task_logs":
-            return []
-        elif file_type in ["run_request", "outputs"]:
-            return {}
-        else:
-            return ""
+        return None
     with file.open(mode="r") as f:
         if file_type in ["cmd", "start_time", "end_time", "exit_code"]:
             return f.read().splitlines()[0]
@@ -150,9 +142,16 @@ def count_system_state() -> Dict[str, int]:
 
 def read_default_wf_engine_params(service_info_path: Optional[Path] = None) \
         -> List[str]:
-    default_wf_engine_params: List[DefaultWorkflowEngineParameter] = \
-        read_service_info(service_info_path)[
-            "default_workflow_engine_parameters"]
+    default_wf_engine_params: List[DefaultWorkflowEngineParameter]
+    if service_info_path is None:
+        default_wf_engine_params = \
+            read_service_info(service_info_path)[
+                "default_workflow_engine_parameters"]
+    else:
+        with service_info_path.open(mode="r") as f:
+            service_info: ServiceInfo = json.load(f)
+        default_wf_engine_params = \
+            service_info["default_workflow_engine_parameters"]
     params: List[str] = []
     for param in default_wf_engine_params:
         params.append(str(param.get("name", "")))

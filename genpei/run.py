@@ -9,7 +9,7 @@ from multiprocessing.context import BaseContext
 from multiprocessing.process import BaseProcess
 from pathlib import Path
 from traceback import print_exc
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from cwltool.main import run as cwltool
 from flask import abort
@@ -145,21 +145,21 @@ def get_run_log(run_id: str) -> RunLog:
 
 
 def get_log(run_id: str) -> Log:
-    str_exit_code: str = read_file(run_id, "exit_code")
-    exit_code: int
-    if str_exit_code == "":
-        exit_code = -999
-    else:
-        exit_code = int(str_exit_code)
+    exit_code: Optional[Union[str, int]] = read_file(run_id, "exit_code")
+    if exit_code is not None:
+        try:
+            exit_code = int(exit_code)
+        except Exception:
+            pass
 
     log: Log = {
-        "name": "",
+        "name": None,  # type: ignore
         "cmd": read_file(run_id, "cmd"),
         "start_time": read_file(run_id, "start_time"),
         "end_time": read_file(run_id, "end_time"),
         "stdout": read_file(run_id, "stdout"),
         "stderr": read_file(run_id, "stderr"),
-        "exit_code": exit_code
+        "exit_code": exit_code  # type: ignore
     }
 
     return log

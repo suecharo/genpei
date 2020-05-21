@@ -11,7 +11,7 @@ from flask.wrappers import Response
 from py._path.local import LocalPath
 
 from genpei.app import create_app, handle_default_params, parse_args
-from genpei.type import RunId, RunStatus
+from genpei.type import RunId, RunLog, RunStatus
 
 
 def post_run_id_cancel(client: FlaskClient,  # type: ignore
@@ -43,10 +43,19 @@ def test_post_run_id_cancel(delete_env_vars: None, tmpdir: LocalPath) -> None:
     assert "run_id" in posts_cancel_res_data
     assert run_id == posts_cancel_res_data["run_id"]
 
-    sleep(3)
     from .test_get_run_id_status import get_run_id_status
-    res: Response = get_run_id_status(client, run_id)
-    res_data: RunStatus = res.get_json()
+    count: int = 0
+    while count <= 60:
+        get_status_res: Response = get_run_id_status(client, run_id)
+        get_status_data: RunStatus = get_status_res.get_json()
+        if get_status_data["state"] == "CANCELED":  # type: ignore
+            break
+        sleep(1)
+        count += 1
 
-    assert res.status_code == 200
-    assert res_data["state"] == "CANCELED"  # type: ignore
+    from .test_get_run_id import get_run_id
+    detail_res: Response = get_run_id(client, run_id)
+    detail_res_data: RunLog = detail_res.get_json()
+
+    assert detail_res.status_code == 200
+    assert detail_res_data["run_log"]["exit_code"] == 15
