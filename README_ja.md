@@ -4,6 +4,7 @@
 [![flake8](https://github.com/suecharo/genpei/workflows/flake8/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Aflake8)
 [![isort](https://github.com/suecharo/genpei/workflows/isort/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Aisort)
 [![mypy](https://github.com/suecharo/genpei/workflows/mypy/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Amypy)
+[![Apache License](https://img.shields.io/badge/license-Apache%202.0-orange.svg?style=flat&color=important)](http://www.apache.org/licenses/LICENSE-2.0)
 
 Genpei (源平) は、[Global Alliance for Genomics and Health](https://www.ga4gh.org) (GA4GH) により制定された [Workflow Execution Service](https://github.com/ga4gh/workflow-execution-service-schemas) (WES) API 定義に準拠した標準実装です。
 Microservice の思想に則り、[Flask](https://a2c.bitbucket.io/flask/) と [cwltool](https://github.com/common-workflow-language/cwltool) を用いており、[Common Workflow Language](https://www.commonwl.org) を用いて作られた、シンプルかつ拡張性の高い REST API Server です。
@@ -20,13 +21,16 @@ $ genpei
 
 ### Docker
 
-Docker の利用も想定しています。
-cwltool と Docker-in-Docker (DinD) の相性より、`docker.dock` や `/tmp` などを mount しなければなりません。
+Docker を用いた利用も想定しています。
+cwltool 内で Docker-in-Docker (DinD) を用いるため、`docker.sock` や `/tmp` などを mount しなければなりません。
 詳しくは、[DockerHub - cwltool](https://hub.docker.com/r/commonworkflowlanguage/cwltool/) のドキュメントを確認してください。
 
 ```bash
-$ docker-compose up -d --build
-$ docker-compose exec app genpei
+# 起動
+$ docker-compose up -d
+
+# 起動確認
+$ docker-compose logs
 ```
 
 ## Usage
@@ -35,8 +39,8 @@ API 仕様は、[GitHub - GA4GH WES](https://github.com/ga4gh/workflow-execution
 
 一番簡単な REST API Request として、`GET /service-info` の例を挙げます。
 
-```bash
-$ curl -X GET localhost:8080/service-info
+```json
+GET /service-info
 {
   "auth_instructions_url": "https://github.com/suecharo/genpei",
   "contact_info_url": "https://github.com/suecharo/genpei",
@@ -70,7 +74,7 @@ $ curl -X GET localhost:8080/service-info
 }
 ```
 
-Genpei の起動 Option (`--host` and `--port`) を指定することで、起動 Host や Port を変更できます。
+起動時引数 (`--host` and `--port`) を指定することで、起動 Host や Port を変更できます。また、これらの引数に対応する環境変数として、`GENPEI_HOST`, `GENPEI_PORT` が用意されています。
 
 ```bash
 genpei --help
@@ -90,38 +94,33 @@ optional arguments:
 $ genpei --host 0.0.0.0 --port 5000
 ```
 
-Genpei は、投入された workflow file や workflow parameter、output files などを FileSystem 上で管理しています。System 上では Run dir と呼んでおり、default は `./run` です。Run dir の場所は、起動 Option (`-r`) で指定することで、変更できます。
+Genpei は、投入された workflow や workflow parameter、output files などを file system 上で管理しています。これら全ての file をまとめた directory を run dir と呼んでおり、default は `${PWD}/run` です。run dir の場所は、起動時引数 `--run-dir` や環境変数 `GENPEI_RUN_DIR` で上書きできます。
 
-Run dir 構造は、以下のようになっており、それぞれの run に関わる様々な file 群が配置されています。初期化やそれぞれの run の削除は `rm` を用いた物理的な削除により行えます。
+run dir 構造は、以下のようになっており、それぞれの run における file 群が配置されています。初期化やそれぞれの run の削除は `rm` を用いた物理的な削除により行えます。
 
 ```bash
 $ tree run
 .
 ├── 11
 │   └── 11a23a68-a914-427a-80cd-9ad6f7cfd256
-│       ├── cmd.txt
-│       ├── end_time.txt
-│       ├── exe
-│       │   ├── ERR034597_1.small.fq.gz
-│       │   ├── ERR034597_2.small.fq.gz
-│       │   ├── fastqc.cwl
-│       │   ├── trimming_and_qc.cwl
-│       │   ├── trimmomatic_pe.cwl
-│       │   └── workflow_params.json
-│       ├── exit_code.txt
-│       ├── outputs
-│       │   ├── ERR034597_1.small_fastqc.html
-│       │   ├── ERR034597_1.small_fastqc.html_2
-│       │   ├── ERR034597_1.small.fq.trimmed.1P.fq
-│       │   ├── ERR034597_1.small.fq.trimmed.1U.fq
-│       │   ├── ERR034597_1.small.fq.trimmed.2P.fq
-│       │   └── ERR034597_1.small.fq.trimmed.2U.fq
-│       ├── run.pid
-│       ├── run_request.json
-│       ├── start_time.txt
-│       ├── state.txt
-│       ├── stderr.log
-│       └── stdout.log
+│      ├── cmd.txt
+│      ├── end_time.txt
+│      ├── exe
+│      │   └── workflow_params.json
+│      ├── exit_code.txt
+│      ├── outputs
+│      │   ├── ERR034597_1.small_fastqc.html
+│      │   ├── ERR034597_1.small.fq.trimmed.1P.fq
+│      │   ├── ERR034597_1.small.fq.trimmed.1U.fq
+│      │   ├── ERR034597_1.small.fq.trimmed.2P.fq
+│      │   ├── ERR034597_1.small.fq.trimmed.2U.fq
+│      │   └── ERR034597_2.small_fastqc.html
+│      ├── run.pid
+│      ├── run_request.json
+│      ├── start_time.txt
+│      ├── state.txt
+│      ├── stderr.log
+│      └── stdout.log
 ├── 14
 │   └── ...
 ├── 2d

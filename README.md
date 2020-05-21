@@ -4,6 +4,7 @@
 [![flake8](https://github.com/suecharo/genpei/workflows/flake8/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Aflake8)
 [![isort](https://github.com/suecharo/genpei/workflows/isort/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Aisort)
 [![mypy](https://github.com/suecharo/genpei/workflows/mypy/badge.svg)](https://github.com/suecharo/genpei/actions?query=workflow%3Amypy)
+[![Apache License](https://img.shields.io/badge/license-Apache%202.0-orange.svg?style=flat&color=important)](http://www.apache.org/licenses/LICENSE-2.0)
 
 [Japanese Document](https://github.com/suecharo/genpei/blob/master/README_ja.md)
 
@@ -13,7 +14,7 @@ It supports the execution and management of Workflow written in [Common Workflow
 
 ## Install and Run
 
-Genpei supports Python 3.5 or newer.
+Genpei supports Python 3.6 or newer.
 
 ```bash
 $ pip3 install genpei
@@ -22,13 +23,16 @@ $ genpei
 
 ### Docker
 
-We also expect to run using Docker.
-Because of the compatibility of cwltool and Docker-in-Docker (DinD), you have to mount `docker.dock`, `/tmp`, etc.
+We also expect to launch using Docker.
+Because of the compatibility of cwltool and Docker-in-Docker (DinD), you have to mount `docker.sock`, `/tmp`, etc.
 Please check the documentation in [DockerHub - cwltool](https://hub.docker.com/r/commonworkflowlanguage/cwltool/) for more information.
 
 ```bash
-$ docker-compose up -d --build
-$ docker-compose exec app genpei
+# Launch
+$ docker-compose up -d
+
+# Launch confirmation
+$ docker-compose logs
 ```
 
 ## Usage
@@ -37,8 +41,8 @@ As API specifications, please check [GitHub - GA4GH WES](https://github.com/ga4g
 
 As the simplest example of a REST API Request, here is the result of a `GET /service-info`.
 
-```bash
-$ curl -X GET localhost:8080/service-info
+```json
+GET /service-info
 {
   "auth_instructions_url": "https://github.com/suecharo/genpei",
   "contact_info_url": "https://github.com/suecharo/genpei",
@@ -72,7 +76,7 @@ $ curl -X GET localhost:8080/service-info
 }
 ```
 
-Startup Option (`--host` and `--port`) of Genpei allows you to change the startup host and port.
+The host and port used by the application can be changed by specifying the startup arguments (`--host` and `--port`). And environment variables corresponding to these arguments are `GENPEI_HOST` and `GENPEI_PORT`.
 
 ```bash
 $ genpei --help
@@ -92,38 +96,33 @@ optional arguments:
 $ genpei --host 0.0.0.0 --port 5000
 ```
 
-Genpei manages submitted workflow files, workflow parameters, output files, etc. on the FileSystem. It is called `Run dir`. The location of default is `./run`. You can change the location of `Run dir` by specifying the startup option (`-r`).
+Genpei manages the submitted workflows, workflow parameters, output files, etc. on the file system. The location of run dir can be overridden by the startup argument `--run-dir` or the environment variable `GENPEI_RUN_DIR`.
 
-The run dir structure looks like the following. There are various files related to each run. Initialization and deletion of each run can be done by physical deletion using `rm`.
+The run dir structure is as follows. Initialization and deletion of each run can be done by physical deletion with `rm`.
 
 ```bash
 $ tree run
 .
 ├── 11
 │   └── 11a23a68-a914-427a-80cd-9ad6f7cfd256
-│       ├── cmd.txt
-│       ├── end_time.txt
-│       ├── exe
-│       │   ├── ERR034597_1.small.fq.gz
-│       │   ├── ERR034597_2.small.fq.gz
-│       │   ├── fastqc.cwl
-│       │   ├── trimming_and_qc.cwl
-│       │   ├── trimmomatic_pe.cwl
-│       │   └── workflow_params.json
-│       ├── exit_code.txt
-│       ├── outputs
-│       │   ├── ERR034597_1.small_fastqc.html
-│       │   ├── ERR034597_1.small_fastqc.html_2
-│       │   ├── ERR034597_1.small.fq.trimmed.1P.fq
-│       │   ├── ERR034597_1.small.fq.trimmed.1U.fq
-│       │   ├── ERR034597_1.small.fq.trimmed.2P.fq
-│       │   └── ERR034597_1.small.fq.trimmed.2U.fq
-│       ├── run.pid
-│       ├── run_request.json
-│       ├── start_time.txt
-│       ├── state.txt
-│       ├── stderr.log
-│       └── stdout.log
+│      ├── cmd.txt
+│      ├── end_time.txt
+│      ├── exe
+│      │   └── workflow_params.json
+│      ├── exit_code.txt
+│      ├── outputs
+│      │   ├── ERR034597_1.small_fastqc.html
+│      │   ├── ERR034597_1.small.fq.trimmed.1P.fq
+│      │   ├── ERR034597_1.small.fq.trimmed.1U.fq
+│      │   ├── ERR034597_1.small.fq.trimmed.2P.fq
+│      │   ├── ERR034597_1.small.fq.trimmed.2U.fq
+│      │   └── ERR034597_2.small_fastqc.html
+│      ├── run.pid
+│      ├── run_request.json
+│      ├── start_time.txt
+│      ├── state.txt
+│      ├── stderr.log
+│      └── stdout.log
 ├── 14
 │   └── ...
 ├── 2d
@@ -143,7 +142,7 @@ $ docker-compose -f docker-compose.dev.yml up -d --build
 $ docker-compose -f docker-compose.dev.yml exec app bash
 ```
 
-We use [flake8](https://pypi.org/project/flake8/), [isort](https://github.com/timothycrosley/isort), and [mypy](http://mypy-lang.org) as the Linter.
+We use [flake8](https://pypi.org/project/flake8/), [isort](https://github.com/timothycrosley/isort), and [mypy](http://mypy-lang.org) as the linter.
 
 ```bash
 $ bash ./tests/lint_and_style_check/flake8.sh
