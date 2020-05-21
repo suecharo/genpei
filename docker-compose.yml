@@ -5,6 +5,7 @@ services:
     container_name: genpei
     volumes:
       - /tmp:/tmp
+      - /usr/bin/docker:/usr/bin/docker
       - /var/run/docker.sock:/var/run/docker.sock
       - ${PWD}:${PWD}
     environment:
